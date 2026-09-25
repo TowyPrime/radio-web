@@ -33,7 +33,7 @@ export default async function RootLayout({
       console.error("Error al obtener el visitante actual", err)
    }
 
-const initialUsername = visitor?.initialUsername ?? null;
+const initialUsername = visitor?.visitorUid ?? null;
 
   const now = new Date();
   const options: Intl.DateTimeFormatOptions = { 
