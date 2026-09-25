@@ -4,8 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import { Heart, MessageCircle, Send } from "lucide-react";
 import type { DemoComment } from "@/data/demo";
+import { notify } from "./toast";
 
 interface StoryCardProps {
+  storyId: string;
   title: string;
   content: string;
   authorName?: string;
@@ -14,10 +16,12 @@ interface StoryCardProps {
   fechaCreacion?: string;
   categoria?: string;
   likesCount?: number;
+  initialLiked: boolean;
   initialComments?: DemoComment[];
 }
 
 export default function StoryCard({
+  storyId,
   title,
   content,
   authorName = "Con el pie derecho radio",
@@ -26,15 +30,17 @@ export default function StoryCard({
   fechaCreacion = "Ahora mismo",
   categoria = "CRÓNICA",
   likesCount = 0,
+  initialLiked = false,
   initialComments = [],
 }: StoryCardProps) {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(initialLiked);
   const [showComments, setShowComments] = useState(false);
   const { requireVisitor } = useVisitor();
   const [comments, setComments] = useState<DemoComment[]>(initialComments);
   const [draft, setDraft] = useState("");
 
-  const likes = likesCount + (liked ? 1 : 0);
+  const didUserToggle = liked !== initialLiked;
+  const likes = likesCount + (didUserToggle ? (liked ? 1 : -1) : 0);
 
   const addComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +49,7 @@ export default function StoryCard({
     if (!text) return;
 
     const listo = await requireVisitor();
-    
+
     if (!listo) return;
 
     setComments((prev) => [...prev, { author: "Tú", text, when: "ahora" }]);
@@ -55,7 +61,33 @@ export default function StoryCard({
 
     if (!listo) return;
 
+    const action = liked ? "unlike" : "like";
+
     setLiked((v) => !v);
+
+    try {
+      const response = await fetch("/api/likes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: action,
+          storyId: storyId,
+        }),
+      });
+
+      if (!response.ok) {
+        setLiked((v) => !v);
+        console.error("No se pudo sincronizar el like en el servidor");
+        notify.error("No se pudo sincronizar el like en el servidor")
+      }
+    } catch (error) {
+      // Error de red, revertimos
+      setLiked((v) => !v);
+      console.error("Error de red al intentar dar/quitar like:", error);
+      notify.error(`Error de red al intentar dar/quitar like: ${error}`)
+    }
   };
 
   return (

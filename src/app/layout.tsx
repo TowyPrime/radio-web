@@ -1,6 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
-import { createServiceRoleClient, VISITOR_COOKIE_NAME } from '@/utils/supabase/service';
-import { cookies } from 'next/headers';
+import { getCurrentVisitor } from '@/utils/supabase/service';
 import Navbar from '@/components/Navbar';
 import { AudioProvider } from '@/context/AudioContext';
 import { VisitorProvider } from '@/context/VisitorContext';
@@ -26,24 +25,15 @@ export default async function RootLayout({
   const { data: { user } } = await supabase.auth.getUser();
 
   // Leemos la cookie del visitante en el servidor
-  const cookieStore = await cookies();
-  const visitorToken = cookieStore.get(VISITOR_COOKIE_NAME)?.value;
+   let visitor = null;
 
-  let initialUsername: string | null = null;
+   try{
+    visitor = await getCurrentVisitor()
+   }catch(err){
+      console.error("Error al obtener el visitante actual", err)
+   }
 
-  // Si existe el token, consultamos la tabla visitors con el service client
-  if (visitorToken) {
-    const serviceSupabase = await createServiceRoleClient();
-    const { data: visitorData } = await serviceSupabase
-      .from("visitors")
-      .select("username")
-      .eq("token", visitorToken)
-      .single();
-
-    if (visitorData) {
-      initialUsername = visitorData.username;
-    }
-  }
+const initialUsername = visitor?.initialUsername ?? null;
 
   const now = new Date();
   const options: Intl.DateTimeFormatOptions = { 

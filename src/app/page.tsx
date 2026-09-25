@@ -2,10 +2,11 @@ import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import StoryCard from '@/components/StoryCard';
 import ClientHeader from '@/components/ClientHeader';
-import { demoStories, type DemoStory } from '@/data/demo';
+import { getCurrentVisitor, createServiceRoleClient } from '@/utils/supabase/service';
 
 export default async function Home() {
   const supabase = await createClient();
+  const supabaseService = createServiceRoleClient();
 
   let user = null;
 
@@ -19,6 +20,15 @@ export default async function Home() {
     console.error('Error al obtener la sesión:', error);
   }
 
+  let visitor = null;
+  try {
+    visitor = await getCurrentVisitor();
+  } catch (err) {
+    console.error('Error al obtener visitante actual', err);
+  }
+
+  const visitoruid = visitor?.visitorUid ?? null;
+
   const { data: stories, error } = await supabase
     .from('stories')
     .select('id, title, content, created_at')
@@ -28,35 +38,64 @@ export default async function Home() {
     console.error('Error al cargar historias:', error);
   }
 
-  // Muestra: historias reales de la base de datos + historias de ejemplo
-  // (con likes y comentarios de muestra mientras esas tablas no estén conectadas).
-  const realStories: DemoStory[] = (stories ?? []).map((s, i) => ({
-    id: String(s.id),
-    title: s.title,
-    content: s.content,
-    created_at: s.created_at,
-    categoria: 'CRÓNICA',
-    likes: demoStories[i % demoStories.length].likes,
-    comments: demoStories[i % demoStories.length].comments,
-  }));
-  const realTitles = new Set(realStories.map((s) => s.title));
-  const allStories = [
-    ...realStories,
-    ...demoStories.filter((s) => !realTitles.has(s.title)),
-  ];
+  const allStories = stories ?? [];
+
+  // ids de las historias
+  const storyIds = allStories.map((s) => s.id);
+
+  // Consulta a `likes`, solo si hay historias que mostrar
+  let likesData: { visitor_uid: string; story_id: string }[] = [];
+  if (storyIds.length > 0) {
+    const { data: likesRows, error: likesError } = await supabaseService
+      .from('likes')
+      .select('visitor_uid, story_id')
+      .in('story_id', storyIds);
+
+    if (likesError) {
+      console.error('Error al cargar los likes:', likesError);
+    } else {
+      likesData = likesRows ?? [];
+    }
+  }
+
+  // Conteo de likes por historia y cuáles marcó el visitante actual
+  const likeCounts: Record<string, number> = {};
+  const likedByMe = new Set<string>();
+
+  for (const row of likesData) {
+    const storyId = String(row.story_id);
+    likeCounts[storyId] = (likeCounts[storyId] ?? 0) + 1;
+
+    if (visitoruid && row.visitor_uid === visitoruid) {
+      likedByMe.add(storyId);
+    }
+  }
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-slate-950 text-slate-100 w-full pb-16">
-      
+
       {/* Contenedor Principal de Historias */}
       <main className="w-full px-4 md:px-8 py-8 max-w-4xl mx-auto">
-        
+
         {/* Encabezado con el Título a la izquierda y el Botón Publicar a la derecha */}
         <ClientHeader user={user} />
-        
+
         <div className="space-y-6">
+          {error && (
+            <p className="text-center text-red-400 py-12">
+              No se pudieron cargar las historias. Intenta de nuevo más tarde.
+            </p>
+          )}
+
+          {!error && allStories.length === 0 && (
+            <p className="text-center text-slate-400 py-12">
+              Todavía no hay historias publicadas.
+            </p>
+          )}
+
           {allStories.map((story) => (
             <StoryCard
+            storyId={story.id}
               key={story.id}
               title={story.title}
               content={story.content}
@@ -65,11 +104,11 @@ export default async function Home() {
                 month: 'long',
                 year: 'numeric',
               })}
-              categoria={story.categoria}
+              categoria="CRÓNICA"
               authorName="Con el pie derecho radio"
               authorRole="Admin"
-              likesCount={story.likes}
-              initialComments={story.comments}
+              likesCount={likeCounts[String(story.id)] ?? 0}
+              initialLiked={likedByMe.has(String(story.id))}
             />
           ))}
         </div>
