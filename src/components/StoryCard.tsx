@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Heart, MessageCircle, Send } from "lucide-react";
 import type { DemoComment } from "@/data/demo";
 import { notify } from "./toast";
+import { error } from "console";
 
 interface StoryCardProps {
   storyId: string;
@@ -44,16 +45,62 @@ export default function StoryCard({
 
   const addComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    const text = draft.trim();
 
+    const text = draft.trim();
     if (!text) return;
 
-    const listo = await requireVisitor();
+    try {
+      const listo = await requireVisitor();
 
-    if (!listo) return;
+      if (!listo) return;
 
-    setComments((prev) => [...prev, { author: "Tú", text, when: "ahora" }]);
-    setDraft("");
+      const response = await fetch("/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          storyId,
+          message: text,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "No se pudo agregar el comentario.");
+      }
+
+      const rawComment = data.comment;
+
+      const formattedDate = new Date(rawComment.created_at).toLocaleDateString(
+        "es-ES",
+        {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        },
+      );
+
+      const newCommentItem = {
+        author: rawComment.username || "visitante",
+        text: rawComment.message,
+        when: formattedDate,
+      };
+
+      setComments((prevComments) => [newCommentItem, ...prevComments]);
+
+      setDraft("");
+    } catch (err: unknown) {
+      console.error("Error al enviar comentario:", err);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Ocurrió un error al enviar tu comentario. Inténtalo de nuevo.";
+      notify.error(errorMessage);
+    }
   };
 
   const handleLike = async () => {
@@ -80,13 +127,13 @@ export default function StoryCard({
       if (!response.ok) {
         setLiked((v) => !v);
         console.error("No se pudo sincronizar el like en el servidor");
-        notify.error("No se pudo sincronizar el like en el servidor")
+        notify.error("No se pudo sincronizar el like en el servidor");
       }
     } catch (error) {
       // Error de red, revertimos
       setLiked((v) => !v);
       console.error("Error de red al intentar dar/quitar like:", error);
-      notify.error(`Error de red al intentar dar/quitar like: ${error}`)
+      notify.error(`Error de red al intentar dar/quitar like: ${error}`);
     }
   };
 

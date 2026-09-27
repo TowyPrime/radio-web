@@ -1,9 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useState, useRef } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
 
 interface VisitorContextType {
   username: string | null;
+  visitorUid: string | null;
   isDialogOpen: boolean;
   requireVisitor: () => Promise<boolean>;
   resolveVisitor: (newUsername: string) => void;
@@ -14,13 +15,20 @@ const VisitorContext = createContext<VisitorContextType | undefined>(undefined);
 
 export const VisitorProvider = ({ 
   children, 
-  initialUsername = null 
+  initialUsername = null,
+  initialVisitorUid = null
 }: { 
   children: React.ReactNode; 
-  initialUsername?: string | null; 
+  initialUsername?: string | null;
+  initialVisitorUid?: string | null;
 }) => {
   const [username, setUsername] = useState<string | null>(initialUsername);
+  const [visitorUid, setVisitorUid] = useState<string | null>(initialVisitorUid);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() =>{
+    setVisitorUid(initialVisitorUid)
+  }, [initialVisitorUid]);
 
   // useRef para guardar de forma mutable la función resolve pendiente sin causar re-renders
   const resolverRef = useRef<((success: boolean) => void) | null>(null);
@@ -66,7 +74,8 @@ export const VisitorProvider = ({
   return (
     <VisitorContext.Provider 
       value={{ 
-        username, 
+        username,
+        visitorUid, 
         isDialogOpen, 
         requireVisitor, 
         resolveVisitor, 
