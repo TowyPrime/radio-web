@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         visitor_uid: visitorUid,
         message: trimmedMessage,
       })
-      .select("message, created_at")
+      .select("id, message, created_at")
       .single();
 
     if (error) {

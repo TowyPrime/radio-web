@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef,} from 'react';
 
 interface VisitorContextType {
   username: string | null;
@@ -23,12 +23,9 @@ export const VisitorProvider = ({
   initialVisitorUid?: string | null;
 }) => {
   const [username, setUsername] = useState<string | null>(initialUsername);
-  const [visitorUid, setVisitorUid] = useState<string | null>(initialVisitorUid);
+  const [visitorUid] = useState<string | null>(initialVisitorUid);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  useEffect(() =>{
-    setVisitorUid(initialVisitorUid)
-  }, [initialVisitorUid]);
 
   // useRef para guardar de forma mutable la función resolve pendiente sin causar re-renders
   const resolverRef = useRef<((success: boolean) => void) | null>(null);

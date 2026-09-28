@@ -5,7 +5,6 @@ import Image from "next/image";
 import { Heart, MessageCircle, Send } from "lucide-react";
 import type { DemoComment } from "@/data/demo";
 import { notify } from "./toast";
-import { error } from "console";
 
 interface StoryCardProps {
   storyId: string;

@@ -138,7 +138,7 @@ export const demoSchedule: DemoShow[] = [
 ];
 
 export interface DemoChatMessage {
-  id: number;
+  id: string;
   author: string;
   text: string;
   time: string;
@@ -146,14 +146,6 @@ export interface DemoChatMessage {
   mine?: boolean;
 }
 
-export const demoChat: DemoChatMessage[] = [
-  { id: 1, author: 'Andrés Vega', text: '¡Buenas tardes a todos! Arrancamos la Hora del vinilo 🎶', time: '12:00', role: 'locutor' },
-  { id: 2, author: 'Marta R.', text: '¡Hola Andrés! Saludos desde el sur', time: '12:01' },
-  { id: 3, author: 'Luis G.', text: 'Qué buena canción para empezar', time: '12:02' },
-  { id: 4, author: 'Ana P.', text: '¿Pueden poner algo de Soda Stereo?', time: '12:04' },
-  { id: 5, author: 'Andrés Vega', text: 'Anotado, Ana. Después del corte va tu canción.', time: '12:05', role: 'locutor' },
-  { id: 6, author: 'Diego F.', text: 'Los escucho desde el trabajo, ¡gracias por la compañía!', time: '12:07' },
-];
 
 export interface DemoTrack {
   id: string;
