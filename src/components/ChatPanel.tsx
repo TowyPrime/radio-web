@@ -13,10 +13,13 @@ interface ChatPanelProps {
 
 export default function ChatPanel({ className = "" }: ChatPanelProps) {
   const [messages, setMessages] = useState<DemoChatMessage[]>([]);
+  const [listeners, setListeners] = useState(0);
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
   const { requireVisitor, visitorUid, username } = useVisitor();
+  const tabInstanceId = useRef(crypto.randomUUID()).current;
 
+  //Mensajes
   useEffect(() => {
     const supabase = createClient();
 
@@ -136,10 +139,43 @@ const channel = supabase
       )
       .subscribe();
 
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, [username, visitorUid]);
+
+  //Contador de oyentes
+  useEffect(() =>{
+  
+    const supabase = createClient();
+
+    const presenceKey = visitorUid || tabInstanceId;
+      
+    const presenceChannel = supabase.channel("listeners-room", {
+      config:{
+        presence:{
+          key: presenceKey 
+        },
+      },
+    });
+
+    presenceChannel.on(
+      "presence",{event:"sync"}, () =>{
+        const state = presenceChannel.presenceState();
+        setListeners(Object.keys(state).length);
+      }
+    )
+    .subscribe(async (status) =>{
+      if(status === "SUBSCRIBED"){
+        await presenceChannel.track({ online_at: new Date().toISOString() });
+      }
+    });
+    return () => {
+    supabase.removeChannel(presenceChannel);
+  };
+
+  }, [visitorUid, tabInstanceId]);
 
   // Desplaza solo la caja del chat (scrollIntoView movería también toda la página)
   useEffect(() => {
@@ -188,7 +224,7 @@ const channel = supabase
         mine: true,
       };
 
-      setMessages((prevMessages) => [newMessageItem, ...prevMessages]);
+      setMessages((prevMessages) => [...prevMessages, newMessageItem]);
 
       setDraft("");
     } catch (err: unknown) {
@@ -209,7 +245,7 @@ const channel = supabase
         <h2 className="font-semibold text-white">Chat en vivo</h2>
         <span className="flex items-center gap-1.5 text-xs text-slate-400">
           <Users className="w-4 h-4" />
-          124 oyentes
+          {listeners} oyentes
         </span>
       </header>
 
