@@ -26,6 +26,7 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+
   // Leemos la cookie del visitante en el servidor
   let visitor = null;
 
