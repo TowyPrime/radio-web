@@ -17,7 +17,7 @@ export default function ChatPanel({ className = "" }: ChatPanelProps) {
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
   const { requireVisitor, visitorUid, username } = useVisitor();
-  const tabInstanceId = useRef(crypto.randomUUID()).current;
+  const [tabInstanceId ]= useState(() => crypto.randomUUID())
 
   //Mensajes
   useEffect(() => {

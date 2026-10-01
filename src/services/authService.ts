@@ -2,21 +2,7 @@ import {createClient}from '../utils/supabase/client';
 
 export class AuthService{
     private static supabase = createClient();
-    //Lógica para iniciar sesión con Google
-    static async signInWithGoogle(redirectTo?: string) {
-        const { data, error } = await this.supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectTo || `${window.location.origin}/auth/callback`,
-      },
-    })
-
-    if (error) {
-      throw new Error(error.message)
-    }
-
-    return data
-    }
+   
 
     //Lógica para iniciar sesión con correo electrónico y contraseña
     static async signInWithEmail(email: string, password: string) {
@@ -59,22 +45,6 @@ export class AuthService{
         }
         return data
     }
-
-      //crea un nuevo usuario con correo electrónico y contraseña
-      static async signUpWithEmail(email: string, password: string) {
-        const { data, error } = await this.supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              // El enlace del correo de confirmación vuelve a la app y abre la sesión
-              emailRedirectTo: `${window.location.origin}/auth/callback`,
-            },
-        })
-        if (error) {
-          throw new Error(error.message)
-        }
-        return data
-      }
 
       //Elimina la cuenta del usuario actual (perfil + usuario de Auth). Se hace en el servidor
       //porque borrar un usuario de Auth requiere la service role key.
