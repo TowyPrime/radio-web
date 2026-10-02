@@ -7,6 +7,7 @@ import { AuthService } from '@/services/authService';
 import { useRouter } from 'next/navigation';
 import { notify } from '@/components/toast';
 import { LoginDialog } from '@/components/LoginDialog';
+import ChangePasswordDialog from '@/components/ChangePasswordDialog';
 
 export default function ProfilePage() {
   const supabase = createClient();
@@ -17,8 +18,11 @@ export default function ProfilePage() {
   const [isNewProfile, setIsNewProfile] = useState(false);
   const [authUid, setAuthUid] = useState<string | null>(null);
 
-  //Estado para controlar la visibilidad del diálogo de login
+  // Estado para controlar la visibilidad del diálogo de login
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+  // Estado para manejar diálogo de cambio de contraseña
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   // Estados del formulario
   const [formData, setFormData] = useState({
@@ -37,7 +41,7 @@ export default function ProfilePage() {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         
         if (authError || !user) {
-            notify.warning("No tienes una sesión activa")
+          notify.warning("No tienes una sesión activa");
           setIsLoginOpen(true);
           router.push('/');
           return;
@@ -71,7 +75,7 @@ export default function ProfilePage() {
         }
       } catch (error) {
         console.error('Error al cargar el perfil:', error);
-        notify.error("Error al cargar el perfil")
+        notify.error("Error al cargar el perfil");
       } finally {
         setLoading(false);
       }
@@ -89,7 +93,7 @@ export default function ProfilePage() {
     }
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!authUid) return;
 
@@ -97,13 +101,11 @@ const handleSubmit = async (e: React.FormEvent) => {
     try {
       let finalAvatarUrl = formData.avatar_url;
 
-      // Si el usuario seleccionó un archivo nuevo, lo subimos a Supabase Storage
       if (selectedFile) {
         const fileExt = selectedFile.name.split('.').pop();
         const fileName = `${authUid}-${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        // Subir al bucket 'images'
         const { error: uploadError } = await supabase.storage
           .from('images')
           .upload(filePath, selectedFile, { upsert: true });
@@ -112,16 +114,13 @@ const handleSubmit = async (e: React.FormEvent) => {
           throw new Error(`Error al subir la imagen: ${uploadError.message}`);
         }
 
-        // Obtener la URL pública del archivo recién subido
         const { data: publicData } = supabase.storage
           .from('images')
           .getPublicUrl(filePath);
 
         finalAvatarUrl = publicData.publicUrl;
-        console.log(finalAvatarUrl)
       }
 
-      // Guardar o actualizar el perfil con la URL final del avatar
       if (isNewProfile) {
         await userService.createProfile({
           uid: authUid,
@@ -132,7 +131,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         });
         setIsNewProfile(false);
         notify.success("¡Perfil creado exitosamente!");
-        console.log('¡Perfil creado exitosamente!');
       } else {
         await userService.updateProfile(authUid, {
           username: formData.username,
@@ -140,12 +138,10 @@ const handleSubmit = async (e: React.FormEvent) => {
           avatar_url: finalAvatarUrl ? finalAvatarUrl : null,
         });
         notify.success("¡Cambios guardados correctamente!");
-        console.log('¡Cambios guardados correctamente!');
       }
 
-      // Actualizar el estado local con la URL definitiva
       setFormData(prev => ({ ...prev, avatar_url: finalAvatarUrl }));
-      setSelectedFile(null); // Limpiar el archivo seleccionado
+      setSelectedFile(null);
 
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '';
@@ -161,20 +157,20 @@ const handleSubmit = async (e: React.FormEvent) => {
       await AuthService.signOut();
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
-      notify.error("No se pudo cerrar la sesión")
+      notify.error("No se pudo cerrar la sesión");
       return;
     }
-    notify.success("Se cerró la sesión correctamente")
+    notify.success("Se cerró la sesión correctamente");
 
     router.refresh();
 
-    setTimeout(()=>{
-      router.push('/')
-    }, 1000)
+    setTimeout(() => {
+      router.push('/');
+    }, 1000);
   };
 
   const handleChangePassword = () => {
-    //TODO: Crear el dialogo para cambiar la contraseña o redirigir a una página de cambio de contraseña
+    setIsChangePasswordOpen(true);
   };
 
   const handleDeleteAccount = async () => {
@@ -184,15 +180,14 @@ const handleSubmit = async (e: React.FormEvent) => {
     if (!confirmed) return;
 
     try {
-      // Borra el perfil y el usuario de Auth en el servidor, y cierra la sesión
       await AuthService.deleteAccount();
-      notify.success("Tu cuenta ha sido eliminada correctamente")
+      notify.success("Tu cuenta ha sido eliminada correctamente");
 
       router.push('/');
       router.refresh();
     } catch (error: unknown) {
       console.error('Error al eliminar la cuenta:', error);
-      notify.error("¡Ocurrió un error al intentar eliminar la cuenta!")
+      notify.error("¡Ocurrió un error al intentar eliminar la cuenta!");
     }
   };
 
@@ -218,10 +213,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       {/* Contenedor Principal en 2 columnas grandes */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
         
-        {/* Columna Izquierda (Ocupa 2 espacios): Avatar + Formulario */}
+        {/* Columna Izquierda: Avatar + Formulario */}
         <div className="md:col-span-2 space-y-6">
           
-          {/* Recuadro de Previsualización del Avatar */}
           <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50 flex items-center gap-6">
             <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-800 border-2 border-slate-700 flex items-center justify-center shrink-0">
               {previewUrl ? (
@@ -247,7 +241,6 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           </div>
 
-          {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-300">Nombre de usuario (Único)</label>
@@ -326,16 +319,22 @@ const handleSubmit = async (e: React.FormEvent) => {
             className="w-full bg-red-900/40 hover:bg-red-900/70 text-red-200 text-sm font-medium py-2 px-3 rounded border border-red-800/50 transition-colors text-left flex items-center justify-between"
           >
             <span>Borrar cuenta</span>
-            <span>⚠️</span>
+            <span>⚠️️</span>
           </button>
         </div>
 
       </div>
 
-      {/*Renderizamos el LoginDialog controlando su estado de apertura y cierre */}
+      {/* Renderizamos el LoginDialog */}
       <LoginDialog 
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 
+      />
+
+      {/* Renderizamos el ChangePasswordDialog conectado a su estado */}
+      <ChangePasswordDialog 
+        isOpen={isChangePasswordOpen} 
+        onClose={() => setIsChangePasswordOpen(false)} 
       />
     </div>
   );
