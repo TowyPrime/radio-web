@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Music, UploadCloud, Trash2 } from "lucide-react";
 import { notify } from "@/components/toast";
 import { type TrackRecord } from "@/services/audioService/types";
@@ -22,12 +21,11 @@ interface MusicManagerProps {
 }
 
 export default function MusicManager({ initialTracks }: MusicManagerProps) {
-  const router = useRouter();
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
-  const [tracks, setTracks] = useState<TrackRecord[]>(initialTracks)
+  const [tracks, setTracks] = useState<TrackRecord[]>(initialTracks);
   const [file, setFile] = useState<File | null>(null);
-  const [deletingId, setDeletingId ] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -145,9 +143,10 @@ export default function MusicManager({ initialTracks }: MusicManagerProps) {
         );
       }
 
+      setTracks((prevTracks) => [dataTrack.track, ...prevTracks]);
+
       clean();
       notify.success("Archivo de música subido correctamente");
-      router.refresh();
     } catch (error: unknown) {
       console.error("Error al enviar archivo de música:", error);
 
@@ -174,41 +173,41 @@ export default function MusicManager({ initialTracks }: MusicManagerProps) {
 
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm(
-      "¿Está seguro de borrar este archivo de música?, esta acción no se puede revertir"
-    )
-    if(!confirmed) return;
+      "¿Está seguro de borrar este archivo de música?, esta acción no se puede revertir",
+    );
+    if (!confirmed) return;
 
-    setDeletingId(id)
+    setDeletingId(id);
 
-    try{
-        const response = await fetch("/api/admin/tracks", {
-          method: "DELETE",
-          headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({id})
-        });
+    try {
+      const response = await fetch("/api/admin/tracks", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if(!response.ok){
-            throw new AppError(data.error || "No se pudo eliminar el track");
-        }
+      if (!response.ok) {
+        throw new AppError(data.error || "No se pudo eliminar el track");
+      }
 
-        setTracks((prevTracks) => prevTracks.filter((track) => track.id !== id));
+      setTracks((prevTracks) => prevTracks.filter((track) => track.id !== id));
 
-    }catch(error:unknown){
-        console.error("Error al eliminar el archivo de música:", error);
-        const errorMessage =
+      notify.success("Se eliminó correctamente el archivo de música");
+    } catch (error: unknown) {
+      console.error("Error al eliminar el archivo de música:", error);
+      const errorMessage =
         error instanceof AppError
           ? error.message
           : "Ocurrió un problema al procesar tu solicitud, inténtalo de nuevo más tarde.";
 
       notify.error(errorMessage);
-    }finally{
+    } finally {
       setDeletingId(null);
     }
-    
   };
 
   return (
@@ -276,11 +275,13 @@ export default function MusicManager({ initialTracks }: MusicManagerProps) {
                   <p className="text-sm text-white truncate">{t.title}</p>
                   <p className="text-xs text-slate-500 truncate">{t.artist}</p>
                 </div>
-                <span className="text-xs text-slate-500">{convertSecondsInMinutes(t.duration)}</span>
+                <span className="text-xs text-slate-500">
+                  {convertSecondsInMinutes(t.duration)}
+                </span>
                 <button
                   onClick={() => handleDelete(t.id)}
-                  disabled= {deletingId == t.id}
-                  className="text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
+                  disabled={deletingId === t.id}
+                  className="text-slate-500 hover:text-red-400 disabled:opacity-50 transition-colors cursor-pointer"
                   aria-label={`Eliminar ${t.title}`}
                 >
                   <Trash2 className="w-4 h-4" />

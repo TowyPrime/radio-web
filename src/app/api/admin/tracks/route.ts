@@ -7,8 +7,6 @@ import {
   MAX_DURATION_SECONDS,
 } from "@/lib/tracks/constants";
 
-
-// Extraer los valores (.values()) en lugar de las claves (.keys())
 const allowedExtensions = Array.from(ALLOWED_FILE_TYPES.values()).join("|");
 const filePathRegex = new RegExp(
   `^uploads\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(${allowedExtensions})$`,
@@ -144,30 +142,41 @@ export async function POST(request: Request) {
       .single();
 
     if (dbError) {
-       const {error: storageRemoveError} =await supabase.storage
-       .from(BUCKET_NAME)
-       .remove([path]);
-
-       if(storageRemoveError){
-        console.error("Fallo al intentar limpiar el archivo huérfano:", storageRemoveError)
-       }
-       if (dbError.code === "23505") {
+      // Manejo prioritario del duplicado
+      if (dbError.code === "23505") {
         return NextResponse.json(
           { error: "Ya existe un registro con este archivo o ruta." },
           { status: 409 },
         );
       }
-      
+
+      //Para errores reales de inserción, limpiamos el archivo huérfano
+      const { error: storageRemoveError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .remove([path]);
+
+      if (storageRemoveError) {
+        console.error(
+          "Fallo al intentar limpiar el archivo huérfano:",
+          storageRemoveError,
+        );
+      }
+
       if (dbError.code === "23514") {
         return NextResponse.json(
-          { error: "Los datos proporcionados violan las restricciones de la base de datos." },
+          {
+            error:
+              "Los datos proporcionados violan las restricciones de la base de datos.",
+          },
           { status: 400 },
         );
       }
 
       console.error("Error de base de datos no mapeado:", dbError);
       return NextResponse.json(
-        { error: "Ocurrió un error al guardar el registro en la base de datos" },
+        {
+          error: "Ocurrió un error al guardar el registro en la base de datos",
+        },
         { status: 500 },
       );
     }
@@ -235,6 +244,21 @@ export async function DELETE(request: Request) {
     }
 
   
+    if (trackToDel.path) {
+      const { error: storageError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .remove([trackToDel.path]);
+
+      if (storageError) {
+        console.error("Error al borrar el archivo físico del bucket:", storageError);
+        return NextResponse.json(
+          { error: "Error al eliminar el archivo físico del almacenamiento" },
+          { status: 500 },
+        );
+      }
+    }
+
+
     const { error: dbError } = await supabase
       .from("tracks")
       .delete()
@@ -248,21 +272,10 @@ export async function DELETE(request: Request) {
       );
     }
 
-    if (trackToDel.path) {
-      const { error: storageError } = await supabase.storage
-        .from(BUCKET_NAME)
-        .remove([trackToDel.path]);
-
-      if (storageError) {
-        console.error("Error al borrar el archivo físico del bucket:", storageError);
-      }
-    }
-
     return NextResponse.json(
       { message: "Track eliminado correctamente", id },
       { status: 200 },
     );
-
   } catch (error: unknown) {
     console.error("Error inesperado en DELETE /api/admin/tracks:", error);
     return NextResponse.json(
