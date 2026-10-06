@@ -1,61 +1,40 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/utils/supabase/service";
-import { createClient } from "@/utils/supabase/server";
+
+import { requireAdmin } from "@/utils/supabase/adminGuard";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const adminCheck = await requireAdmin();
 
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    if (!adminCheck.ok) {
       return NextResponse.json(
-        { error: "No tienes una sesión activa" },
-        { status: 401 },
+        { error: adminCheck.error },
+        { status: adminCheck.status },
       );
     }
+    const body = await request.json();
 
     const { email: emailToInvite } = body;
 
-    if (!emailToInvite) {
+    if(!emailToInvite){
       return NextResponse.json(
-        { error: 'El campo "email" es obligatorio' },
-        { status: 400 },
+        { error: "El correo electrónico es requerido" },
+        { status: 400 }
       );
     }
-
+    if (typeof emailToInvite !== "string") {
+      return NextResponse.json(
+        { error: "El correo electrónico debe ser una cadena de texto" },
+        { status: 400 }
+      );
+    }
     const admin = createServiceRoleClient();
 
-    const { data: profileData, error: profileError } = await admin
-      .from("profiles")
-      .select("rol")
-      .eq("uid", user.id)
-      .single();
-
-    if (profileError || !profileData) {
-      return NextResponse.json(
-        { error: "No se pudo obtener el perfil del usuario" },
-        { status: 400 },
-      );
-    }
-
-    if (profileData.rol !== "admin") {
-      return NextResponse.json(
-        {
-          error:
-            "Se requiere una cuenta de administrador para realizar esta acción",
-        },
-        { status: 403 },
-      );
-    }
-     
-    const redirectToUrl = new URL(`${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`);
-    redirectToUrl.searchParams.set('next', '/profile');
+    const redirectToUrl = new URL(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+    );
+    redirectToUrl.searchParams.set("next", "/profile");
 
     const { data: inviteData, error: inviteError } =
       await admin.auth.admin.inviteUserByEmail(emailToInvite, {

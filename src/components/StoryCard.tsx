@@ -98,6 +98,7 @@ export default function StoryCard({
         err instanceof Error
           ? err.message
           : "Ocurrió un error al enviar tu comentario. Inténtalo de nuevo.";
+          notify.error(errorMessage);
       notify.error(errorMessage);
     }
   };
