@@ -13,6 +13,7 @@ const filePathRegex = new RegExp(
   "i",
 );
 
+
 export async function POST(request: Request) {
   try {
     const adminCheck = await requireAdmin();
@@ -192,6 +193,8 @@ export async function POST(request: Request) {
   }
 }
 
+const uuidRegex =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 export async function DELETE(request: Request) {
   try {
     const adminCheck = await requireAdmin();
@@ -227,6 +230,14 @@ export async function DELETE(request: Request) {
         { status: 400 },
       );
     }
+
+    if(!uuidRegex.test(id)){
+      return NextResponse.json(
+        {error: "El id no tiene un formato válido"},
+        {status: 400}
+      );
+    }
+    
 
     const supabase = createServiceRoleClient();
 
