@@ -6,6 +6,7 @@ import {
   BUCKET_NAME,
   MAX_DURATION_SECONDS,
 } from "@/lib/tracks/constants";
+ import { UUID_REGEX } from "@/lib/tracks/constants";
 
 const allowedExtensions = Array.from(ALLOWED_FILE_TYPES.values()).join("|");
 const filePathRegex = new RegExp(
@@ -193,11 +194,10 @@ export async function POST(request: Request) {
   }
 }
 
-const uuidRegex =
-  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 export async function DELETE(request: Request) {
   try {
     const adminCheck = await requireAdmin();
+
     if (!adminCheck.ok) {
       return NextResponse.json(
         { error: adminCheck.error },
@@ -206,6 +206,7 @@ export async function DELETE(request: Request) {
     }
 
     let body;
+
     try {
       body = await request.json();
     } catch {
@@ -217,7 +218,10 @@ export async function DELETE(request: Request) {
 
     if (!body || typeof body !== "object" || Array.isArray(body)) {
       return NextResponse.json(
-        { error: "El cuerpo de la petición es requerido y debe ser un objeto" },
+        {
+          error:
+            "El cuerpo de la petición es requerido y debe ser un objeto",
+        },
         { status: 400 },
       );
     }
@@ -226,61 +230,96 @@ export async function DELETE(request: Request) {
 
     if (!id || typeof id !== "string") {
       return NextResponse.json(
-        { error: "El ID del track es requerido y debe ser un texto válido" },
+        {
+          error: "El ID del track es requerido y debe ser un texto válido",
+        },
         { status: 400 },
       );
     }
 
-    if(!uuidRegex.test(id)){
+    if (!UUID_REGEX.test(id)) {
       return NextResponse.json(
-        {error: "El id no tiene un formato válido"},
-        {status: 400}
+        { error: "El id no tiene un formato válido" },
+        { status: 400 },
       );
     }
-    
 
     const supabase = createServiceRoleClient();
 
+    // Buscar el track antes de eliminarlo
     const { data: trackToDel, error: findError } = await supabase
       .from("tracks")
       .select("id, path")
       .eq("id", id)
       .single();
 
-    if (findError || !trackToDel) {
+    // El track no existe
+    if (findError?.code === "PGRST116") {
       return NextResponse.json(
         { error: "No se encontró el track especificado" },
         { status: 404 },
       );
     }
 
-  
-    if (trackToDel.path) {
-      const { error: storageError } = await supabase.storage
-        .from(BUCKET_NAME)
-        .remove([trackToDel.path]);
+    // Ocurrió un error real al consultar la DB
+    if (findError) {
+      console.error(
+        "Error al buscar el track antes de eliminarlo:",
+        findError,
+      );
 
-      if (storageError) {
-        console.error("Error al borrar el archivo físico del bucket:", storageError);
-        return NextResponse.json(
-          { error: "Error al eliminar el archivo físico del almacenamiento" },
-          { status: 500 },
-        );
-      }
+      return NextResponse.json(
+        { error: "Ocurrió un error al consultar el track" },
+        { status: 500 },
+      );
     }
 
+    // Protección adicional
+    if (!trackToDel) {
+      return NextResponse.json(
+        { error: "No se encontró el track especificado" },
+        { status: 404 },
+      );
+    }
 
+    // Primero eliminamos el registro de la DB
     const { error: dbError } = await supabase
       .from("tracks")
       .delete()
       .eq("id", id);
 
     if (dbError) {
-      console.error("Error al eliminar el registro de la base de datos:", dbError);
+      console.error(
+        "Error al eliminar el registro de la base de datos:",
+        dbError,
+      );
+
       return NextResponse.json(
         { error: "Ocurrió un error al eliminar el registro" },
         { status: 500 },
       );
+    }
+
+    // Después eliminamos el archivo físico
+    if (trackToDel.path) {
+      const { error: storageError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .remove([trackToDel.path]);
+
+      if (storageError) {
+        console.error(
+          "El registro fue eliminado, pero no se pudo eliminar el archivo físico:",
+          storageError,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "El track fue eliminado, pero no se pudo eliminar el archivo físico del almacenamiento",
+          },
+          { status: 500 },
+        );
+      }
     }
 
     return NextResponse.json(
@@ -288,7 +327,11 @@ export async function DELETE(request: Request) {
       { status: 200 },
     );
   } catch (error: unknown) {
-    console.error("Error inesperado en DELETE /api/admin/tracks:", error);
+    console.error(
+      "Error inesperado en DELETE /api/admin/tracks:",
+      error,
+    );
+
     return NextResponse.json(
       { error: "Ocurrió un error inesperado en el servidor" },
       { status: 500 },
