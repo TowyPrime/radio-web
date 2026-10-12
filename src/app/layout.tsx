@@ -12,7 +12,11 @@ import "./globals.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata = {
-  title: "Mi Emisora",
+  title: {
+    default: "Con el píe derecho radio",
+    template: "%s | Con el píe derecho radio",
+  },
+
   description: "La mejor emisora y portal de noticias",
 };
 

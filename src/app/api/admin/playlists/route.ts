@@ -3,6 +3,8 @@ import { createServiceRoleClient } from "@/utils/supabase/service";
 import { requireAdmin } from "@/utils/supabase/adminGuard";
 import { Playlist, PlaylistRecord } from "@/services/audioService/types";
 
+
+
 export async function POST(request: Request) {
   try {
     const adminCheck = await requireAdmin();
@@ -116,7 +118,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("playlists")
-      .select("* , playlist_tracks(count)")
+      .select("id, title, created_at, playlist_tracks(count)")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -151,3 +153,6 @@ export async function GET() {
     );
   }
 }
+
+
+

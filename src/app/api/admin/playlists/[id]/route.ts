@@ -3,6 +3,7 @@ import { createServiceRoleClient } from "@/utils/supabase/service";
 import { requireAdmin } from "@/utils/supabase/adminGuard";
 import { UUID_REGEX, MAX_TRACKS_PER_PLAYLIST } from "@/lib/tracks/constants";
 import { PlaylistTrackRow, PlaylistTrack } from "@/services/audioService/types";
+import { error } from "console";
 
 export async function POST(
   request: Request,
@@ -401,6 +402,113 @@ export async function GET(
     return NextResponse.json({ tracks: tracks });
   } catch (error: unknown) {
     console.error("Error inesperado en GET/api/admin/playlist/[id]:", error);
+    return NextResponse.json(
+      { error: "Ocurrió un error inesperado en el servidor" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const adminCheck = await requireAdmin();
+
+    if (!adminCheck.ok) {
+      return NextResponse.json(
+        { error: adminCheck.error },
+        { status: adminCheck.status },
+      );
+    }
+
+    const { id: playlistId } = await params;
+
+    if (typeof playlistId !== "string" || !UUID_REGEX.test(playlistId)) {
+      return NextResponse.json(
+        { error: "El id de la playlist no tiene un formato válido" },
+        { status: 400 },
+      );
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      return NextResponse.json(
+        { error: "El formato dfel cuerpo de la petición es invalido" },
+        { status: 400 },
+      );
+    }
+
+    if (typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { error: "El cuerpo de la petición es requerido y debe ser un objeto" },
+        { status: 400 },
+      );
+    }
+
+    const { title } = body;
+
+    if (typeof title !== "string") {
+      return NextResponse.json(
+        { error: "El titulo debe ser texto" },
+        { status: 400 },
+      );
+    }
+
+    const trimmedTitle = title.trim();
+
+    if (trimmedTitle.length < 1 || trimmedTitle.length > 50) {
+      return NextResponse.json(
+        { error: "El titulo debe tener entre 1 y 50 caracteres" },
+        { status: 400 },
+      );
+    }
+
+    const supabase = createServiceRoleClient();
+
+    const { data, error } = await supabase
+      .from("playlists")
+      .update({ title: trimmedTitle })
+      .eq("id", playlistId)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      if (error.code === "23505") {
+        return NextResponse.json(
+          { error: "Ya existe una playlist con erse nombre" },
+          { status: 409 },
+        );
+      }
+
+      if (error.code === "23514") {
+        return NextResponse.json(
+          { error: "El titulo no cumple las restricciones permitidas" },
+          { status: 400 },
+        );
+      }
+
+      console.error("Error al cambiar el nombre de playlist");
+      return NextResponse.json(
+        { error: "Ocurrió un error al renombrar playlist" },
+        { status: 500 },
+      );
+    }
+
+    if (!data) {
+      return NextResponse.json(
+        { error: "No se encontró la playlist especificada" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ playlist: data }, { status: 200 });
+  } catch (error: unknown) {
+    console.error("Error inesperado en PATCH api/admin/playlists/[id]:", error);
+
     return NextResponse.json(
       { error: "Ocurrió un error inesperado en el servidor" },
       { status: 500 },

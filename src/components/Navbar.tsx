@@ -76,12 +76,12 @@ export default function Navbar({
             title="Ir al inicio"
           >
             <Image 
-              src="/logo.svg"
+              src="/icon.jpg"
               alt="Logo de la empresa"
               width={40}
               height={40}
               unoptimized
-              className="rounded-full object-cover border border-slate-700 group-hover:border-blue-500 transition-colors"
+              className="w-10 h-10 rounded-full object-cover border border-slate-700 group-hover:border-blue-500 transition-colors"
             />
           </Link>
           
