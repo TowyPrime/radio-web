@@ -3,7 +3,6 @@ import { createServiceRoleClient } from "@/utils/supabase/service";
 import { requireAdmin } from "@/utils/supabase/adminGuard";
 import { UUID_REGEX, MAX_TRACKS_PER_PLAYLIST } from "@/lib/tracks/constants";
 import { PlaylistTrackRow, PlaylistTrack } from "@/services/audioService/types";
-import { error } from "console";
 
 export async function POST(
   request: Request,
@@ -435,9 +434,9 @@ export async function PATCH(
     let body;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch  {
       return NextResponse.json(
-        { error: "El formato dfel cuerpo de la petición es invalido" },
+        { error: "El formato del cuerpo de la petición es invalido" },
         { status: 400 },
       );
     }
@@ -479,7 +478,7 @@ export async function PATCH(
     if (error) {
       if (error.code === "23505") {
         return NextResponse.json(
-          { error: "Ya existe una playlist con erse nombre" },
+          { error: "Ya existe una playlist con ese nombre" },
           { status: 409 },
         );
       }
@@ -508,6 +507,70 @@ export async function PATCH(
     return NextResponse.json({ playlist: data }, { status: 200 });
   } catch (error: unknown) {
     console.error("Error inesperado en PATCH api/admin/playlists/[id]:", error);
+
+    return NextResponse.json(
+      { error: "Ocurrió un error inesperado en el servidor" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const adminCheck = await requireAdmin();
+
+    if (!adminCheck.ok) {
+      return NextResponse.json(
+        { error: adminCheck.error },
+        { status: adminCheck.status },
+      );
+    }
+
+    const { id: playlistId } = await params;
+
+    if (typeof playlistId !== "string" || !UUID_REGEX.test(playlistId)) {
+      return NextResponse.json(
+        { error: "El id de la playlist no tiene un formato válido" },
+        { status: 400 },
+      );
+    }
+
+    const supabase = createServiceRoleClient();
+
+    const { data, error } = await supabase
+      .from("playlists")
+      .delete()
+      .eq("id", playlistId)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error al borrar la playlist:", error);
+      return NextResponse.json(
+        { error: "Ocurrió un error al borrar la playlist" },
+        { status: 500 },
+      );
+    }
+
+    if (!data) {
+      return NextResponse.json(
+        { error: "No se encontró la playlist especificada" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Playlist eliminada correctamentte" },
+      { status: 200 },
+    );
+  } catch (error: unknown) {
+    console.error(
+      "Error inesperado en DELETE api/admin/playlists/[id]:",
+      error,
+    );
 
     return NextResponse.json(
       { error: "Ocurrió un error inesperado en el servidor" },
