@@ -7,6 +7,7 @@ import {
   MAX_DURATION_SECONDS,
 } from "@/lib/tracks/constants";
  import { UUID_REGEX } from "@/lib/tracks/constants";
+import { isTrackOnAir } from "@/lib/schedule/server";
 
 const allowedExtensions = Array.from(ALLOWED_FILE_TYPES.values()).join("|");
 const filePathRegex = new RegExp(
@@ -241,6 +242,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json(
         { error: "El id no tiene un formato válido" },
         { status: 400 },
+      );
+    }
+
+    if (await isTrackOnAir(id)) {
+      return NextResponse.json(
+        { error: "Esta canción forma parte de una playlist que está al aire y no se puede borrar" },
+        { status: 409 },
       );
     }
 

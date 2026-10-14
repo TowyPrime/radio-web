@@ -86,7 +86,7 @@ export default function Navbar({
           </Link>
           
           <Link 
-            href="/news" 
+            href="/" 
             onClick={onNewsClick}
             className="text-slate-300 hover:text-white transition-colors font-medium text-sm md:text-base cursor-pointer"
           >

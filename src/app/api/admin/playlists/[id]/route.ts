@@ -3,6 +3,7 @@ import { createServiceRoleClient } from "@/utils/supabase/service";
 import { requireAdmin } from "@/utils/supabase/adminGuard";
 import { UUID_REGEX, MAX_TRACKS_PER_PLAYLIST } from "@/lib/tracks/constants";
 import { PlaylistTrackRow, PlaylistTrack } from "@/services/audioService/types";
+import { isPlaylistOnAir } from "@/lib/schedule/server";
 
 export async function POST(
   request: Request,
@@ -50,6 +51,13 @@ export async function POST(
       return NextResponse.json(
         { error: "La id de la canción no tiene un formato válido" },
         { status: 400 },
+      );
+    }
+
+    if (await isPlaylistOnAir(playlistId)) {
+      return NextResponse.json(
+        { error: "Esta playlist está al aire en este momento y no se puede modificar" },
+        { status: 409 },
       );
     }
 
@@ -247,6 +255,13 @@ export async function PUT(
           { status: 400 },
         );
       }
+    }
+
+    if (await isPlaylistOnAir(playlistId)) {
+      return NextResponse.json(
+        { error: "Esta playlist está al aire en este momento y no se puede modificar" },
+        { status: 409 },
+      );
     }
 
     const supabase = createServiceRoleClient();
@@ -466,6 +481,13 @@ export async function PATCH(
       );
     }
 
+    if (await isPlaylistOnAir(playlistId)) {
+      return NextResponse.json(
+        { error: "Esta playlist está al aire en este momento y no se puede modificar" },
+        { status: 409 },
+      );
+    }
+
     const supabase = createServiceRoleClient();
 
     const { data, error } = await supabase
@@ -535,6 +557,13 @@ export async function DELETE(
       return NextResponse.json(
         { error: "El id de la playlist no tiene un formato válido" },
         { status: 400 },
+      );
+    }
+
+    if (await isPlaylistOnAir(playlistId)) {
+      return NextResponse.json(
+        { error: "Esta playlist está al aire en este momento y no se puede modificar" },
+        { status: 409 },
       );
     }
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/utils/supabase/service";
 import { requireAdmin } from "@/utils/supabase/adminGuard";
 import { UUID_REGEX } from "@/lib/tracks/constants";
+import { isPlaylistOnAir } from "@/lib/schedule/server";
 
 export async function DELETE(
   request: Request,
@@ -32,6 +33,13 @@ export async function DELETE(
       return NextResponse.json(
         { error: "El id de la canción no tiene un formato válido" },
         { status: 400 },
+      );
+    }
+
+    if (await isPlaylistOnAir(playlistId)) {
+      return NextResponse.json(
+        { error: "Esta playlist está al aire en este momento y no se puede modificar" },
+        { status: 409 },
       );
     }
 

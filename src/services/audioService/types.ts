@@ -42,3 +42,29 @@ export interface PlaylistTrack {
   duration:number;
   url: string;
 }
+
+export interface BroadcastTrack{
+  title:string;
+  artist: string;
+  duration: number;
+  url: string;
+}
+
+export interface BroadcastCurrent{
+  slot_id: string;
+  playlist_title: string;
+  starts_at: string
+  ends_at: string;
+  tracks: BroadcastTrack[];
+}
+
+export interface BroadcastNext{
+  playlist_title: string;
+  starts_at: string;
+}
+
+export interface BroadcastState{
+  serverTime: string;
+  current:BroadcastCurrent | null;
+  next: BroadcastNext | null; 
+}

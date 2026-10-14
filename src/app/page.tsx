@@ -1,177 +1,61 @@
-import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
-import StoryCard from "@/components/StoryCard";
-import ClientHeader from "@/components/ClientHeader";
-import {
-  getCurrentVisitor,
-  createServiceRoleClient,
-} from "@/utils/supabase/service";
-import { DemoComment } from "@/data/demo";
+import { Clock } from "lucide-react";
+import { demoNews } from "@/data/demo";
 
-export default async function Home() {
-  const supabase = await createClient();
-  const supabaseService = createServiceRoleClient();
-
-  let user = null;
-
-  try {
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!authError && authUser) {
-      user = authUser;
-    }
-  } catch (error) {
-    console.error("Error al obtener la sesión:", error);
-  }
-
-  let visitor = null;
-  try {
-    visitor = await getCurrentVisitor();
-  } catch (err) {
-    console.error("Error al obtener visitante actual", err);
-  }
-
-  const visitoruid = visitor?.visitorUid ?? null;
-
-  const { data: stories, error } = await supabase
-    .from("stories")
-    .select("id, title, content, created_at")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error al cargar historias:", error);
-  }
-
-  const allStories = stories ?? [];
-
-  // ids de las historias
-  const storyIds = allStories.map((s) => s.id);
-
-  // Consulta a `likes`, solo si hay historias que mostrar
-  let likesData: { visitor_uid?: string; story_id?: string }[] = [];
-  if (storyIds.length > 0) {
-    const { data: likesRows, error: likesError } = await supabaseService
-      .from("likes")
-      .select("visitor_uid, story_id")
-      .in("story_id", storyIds);
-
-    if (likesError) {
-      console.error("Error al cargar los likes:", likesError);
-    } else {
-      likesData = likesRows ?? [];
-    }
-  }
-
- type storyComment = {
-  id: string;
-  message: string;
-  created_at: string;
-  story_id: string;
-  visitors: { username: string } | null;
-};
-
-
-let commentsData: storyComment[] = [];
-
-  const { data: commentsRows, error: errorComents } = await supabaseService
-    .from("comments")
-    .select("id, message, created_at, story_id, visitors(username)")
-    .in("story_id", storyIds)
-    .order("created_at", { ascending: false });
-
-  if (errorComents) {
-    console.error("Error al cargar los comentarios");
-  } else {
-    commentsData = (commentsRows ?? []) as unknown as storyComment[];
-  }
-
-
-  const commentByHistory = new Map<string, DemoComment[]> ();
-
-
-
-  for(const row of commentsData){
-    const storyId = String(row.story_id);
-
-    //Si el mapa no tiene un arreglo
-    if(!commentByHistory.has(storyId)){
-      commentByHistory.set(storyId, []);
-    }
-
-    const authorName = row.visitors?.username || "visitante";
-
-    const formattedDate = new Date(row.created_at).toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  commentByHistory.get(storyId)!.push({
-    author: authorName,
-    text: row.message,
-    when: formattedDate,
-  });
-  }
-
-  // Conteo de likes por historia y cuáles marcó el visitante actual
-  const likeCounts: Record<string, number> = {};
-  const likedByMe = new Set<string>();
-
-  for (const row of likesData) {
-    const storyId = String(row.story_id);
-    likeCounts[storyId] = (likeCounts[storyId] ?? 0) + 1;
-
-    if (visitoruid && row.visitor_uid === visitoruid) {
-      likedByMe.add(storyId);
-    }
-  }
+export default function Home() {
+  const [featured, ...rest] = demoNews;
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-slate-950 text-slate-100 w-full pb-16">
-      {/* Contenedor Principal de Historias */}
-      <main className="w-full px-4 md:px-8 py-8 max-w-4xl mx-auto">
-        {/* Encabezado con el Título a la izquierda y el Botón Publicar a la derecha */}
-        <ClientHeader user={user} />
+      <main className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+        <h1 className="text-3xl font-bold text-white mb-8">Noticias</h1>
 
-        <div className="space-y-6">
-          {error && (
-            <p className="text-center text-red-400 py-12">
-              No se pudieron cargar las historias. Intenta de nuevo más tarde.
-            </p>
-          )}
+        {/* Noticia destacada */}
+        <article className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 grid md:grid-cols-2 mb-8">
+          <div className={`min-h-52 bg-gradient-to-br ${featured.gradient}`} />
+          <div className="p-6 md:p-8 flex flex-col justify-center gap-3">
+            <span className="text-xs font-bold tracking-wider text-blue-400">
+              {featured.category}
+            </span>
+            <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+              {featured.title}
+            </h2>
+            <p className="text-slate-400">{featured.summary}</p>
+            <div className="flex items-center gap-3 text-xs text-slate-500 mt-2">
+              <span>{featured.author}</span>
+              <span>·</span>
+              <span>{featured.date}</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {featured.readTime}
+              </span>
+            </div>
+          </div>
+        </article>
 
-          {!error && allStories.length === 0 && (
-            <p className="text-center text-slate-400 py-12">
-              Todavía no hay historias publicadas.
-            </p>
-          )}
-
-          {allStories.map((story) => (
-            <StoryCard
-              storyId={story.id}
-              key={story.id}
-              title={story.title}
-              content={story.content}
-              initialComments={commentByHistory.get(String(story.id)) ?? []}
-              fechaCreacion={new Date(story.created_at).toLocaleDateString(
-                "es-ES",
-                {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                },
-              )}
-              categoria="CRÓNICA"
-              authorName="Con el pie derecho radio"
-              authorRole="Admin"
-              likesCount={likeCounts[String(story.id)] ?? 0}
-              initialLiked={likedByMe.has(String(story.id))}
-            />
+        {/* Resto de noticias */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {rest.map((n) => (
+            <article
+              key={n.id}
+              className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 flex flex-col hover:border-slate-700 transition-colors"
+            >
+              <div className={`h-36 bg-gradient-to-br ${n.gradient}`} />
+              <div className="p-5 flex flex-col gap-2 flex-1">
+                <span className="text-[11px] font-bold tracking-wider text-blue-400">
+                  {n.category}
+                </span>
+                <h3 className="text-lg font-semibold text-white leading-snug">
+                  {n.title}
+                </h3>
+                <p className="text-sm text-slate-400 flex-1">{n.summary}</p>
+                <div className="flex items-center gap-3 text-xs text-slate-500 pt-2">
+                  <span>{n.author}</span>
+                  <span>·</span>
+                  <span>{n.date}</span>
+                </div>
+              </div>
+            </article>
           ))}
         </div>
       </main>
