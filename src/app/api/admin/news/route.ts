@@ -1,19 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/utils/supabase/service";
 import { requireAdmin } from "@/utils/supabase/adminGuard";
-import {
-  ALLOWED_IMAGE_TYPES,
-  NEWS_BUCKET_NAME,
-  NEWS_CATEGORIES,
-  NEWS_LIMITS,
-} from "@/lib/news/constants";
-import { htmlToPlainText, sanitizeNewsHtml } from "@/lib/news/sanitize";
-
-const coverExtensions = Array.from(ALLOWED_IMAGE_TYPES.values()).join("|");
-const coverPathRegex = new RegExp(
-  `^covers/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(${coverExtensions})$`,
-  "i",
-);
+import { NEWS_BUCKET_NAME, NEWS_LIMITS } from "@/lib/news/constants";
+import { parseNewsInput } from "@/lib/news/validate";
 
 export async function POST(request: Request) {
   try {
@@ -43,70 +32,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const { title, summary, category, content, cover_path } = body;
+    const parsed = parseNewsInput(body);
 
-    if (
-      typeof title !== "string" ||
-      typeof summary !== "string" ||
-      typeof category !== "string" ||
-      typeof content !== "string"
-    ) {
-      return NextResponse.json(
-        { error: "Título, resumen, categoría y contenido deben ser texto" },
-        { status: 400 },
-      );
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
-    const trimmedTitle = title.trim();
-    const trimmedSummary = summary.trim();
-
-    if (trimmedTitle.length < 1 || trimmedTitle.length > NEWS_LIMITS.title) {
-      return NextResponse.json(
-        { error: `El título debe tener entre 1 y ${NEWS_LIMITS.title} caracteres` },
-        { status: 400 },
-      );
-    }
-
-    if (trimmedSummary.length < 1 || trimmedSummary.length > NEWS_LIMITS.summary) {
-      return NextResponse.json(
-        { error: `El resumen debe tener entre 1 y ${NEWS_LIMITS.summary} caracteres` },
-        { status: 400 },
-      );
-    }
-
-    if (!(NEWS_CATEGORIES as readonly string[]).includes(category)) {
-      return NextResponse.json(
-        { error: "La categoría no es válida" },
-        { status: 400 },
-      );
-    }
-
-    const cleanContent = sanitizeNewsHtml(content);
-
-    if (htmlToPlainText(cleanContent).length === 0) {
-      return NextResponse.json(
-        { error: "El contenido de la noticia no puede estar vacío" },
-        { status: 400 },
-      );
-    }
-
-    const hasCover = cover_path !== undefined && cover_path !== null;
-
-    if (hasCover && (typeof cover_path !== "string" || !coverPathRegex.test(cover_path))) {
-      return NextResponse.json(
-        { error: "La ruta de la portada no tiene un formato válido" },
-        { status: 400 },
-      );
-    }
+    const { title, summary, category, content } = parsed.data;
+    const coverPath = parsed.data.cover_path ?? null;
 
     const supabase = createServiceRoleClient();
 
     let coverUrl: string | null = null;
 
-    if (hasCover) {
+    if (coverPath) {
       const { data: exists, error: existsError } = await supabase.storage
         .from(NEWS_BUCKET_NAME)
-        .exists(cover_path);
+        .exists(coverPath);
 
       if (existsError) {
         console.error("Error al verificar la portada:", existsError);
@@ -125,7 +67,7 @@ export async function POST(request: Request) {
 
       coverUrl = supabase.storage
         .from(NEWS_BUCKET_NAME)
-        .getPublicUrl(cover_path).data.publicUrl;
+        .getPublicUrl(coverPath).data.publicUrl;
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -150,11 +92,11 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("news")
       .insert({
-        title: trimmedTitle,
-        summary: trimmedSummary,
+        title,
+        summary,
         category,
-        body: cleanContent,
-        cover_path: hasCover ? cover_path : null,
+        body: content,
+        cover_path: coverPath,
         cover_url: coverUrl,
         author_name: authorName,
       })
@@ -162,10 +104,10 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      if (hasCover) {
+      if (coverPath) {
         const { error: removeError } = await supabase.storage
           .from(NEWS_BUCKET_NAME)
-          .remove([cover_path]);
+          .remove([coverPath]);
 
         if (removeError) {
           console.error("Fallo al limpiar la portada huérfana:", removeError);
