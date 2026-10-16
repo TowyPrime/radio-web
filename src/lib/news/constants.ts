@@ -19,3 +19,5 @@ export const NEWS_LIMITS = {
   summary: 300,
   authorName: 60,
 } as const;
+
+export const MAX_COVER_BYTES = 5 *1024 *1024; 

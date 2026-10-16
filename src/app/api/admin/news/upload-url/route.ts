@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const path = `covers/${crypto.randomUUID}.${extension}`;
+    const path = `covers/${crypto.randomUUID()}.${extension}`;
 
     const supabase = createServiceRoleClient();
 
