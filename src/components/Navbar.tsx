@@ -13,6 +13,7 @@ import {
   ListPlus,
   LogOut,
   Newspaper,
+  CalendarClock,
 } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
@@ -221,6 +222,14 @@ export default function Navbar({
                         >
                           <ListPlus className="w-4 h-4 text-blue-400" />
                           <span>Crear playlist</span>
+                        </Link>
+                        <Link
+                        href="/admin/schedule"
+                        onClick={( ) => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-800 transition-colors"
+                        >
+                          <CalendarClock className="w-4 h-4 text-blue-400" />
+                          Crear Horario
                         </Link>
                         <Link
                           href="/admin/news"

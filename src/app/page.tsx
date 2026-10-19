@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { newsSummary } from "@/lib/news/types";
-import { getNewSummaries } from "@/lib/news/queries";
+import { NewsSummary } from "@/lib/news/types";
+import { getNewsSummaries } from "@/lib/news/queries";
 import { STATION_TIME_ZONE } from "@/lib/schedule/constants";
 
 export default async function Home() {
-  let listNews: newsSummary[] = [];
+  let listNews: NewsSummary[] = [];
   let errorMessage: string | null = null;
 
   try {
-    listNews = await getNewSummaries();
+    listNews = await getNewsSummaries();
   } catch (error) {
     console.error("Ocurrió un error al intentar obtener noticias:", error);
     errorMessage =

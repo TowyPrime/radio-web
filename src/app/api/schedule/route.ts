@@ -92,7 +92,7 @@ export async function GET() {
         { error: "Ocurrió un error al consultar la programación" },
         { status: 500 },
       );
-    }
+    }//
 
     let next: BroadcastNext | null = null;
 

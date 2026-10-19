@@ -11,7 +11,7 @@ export interface NewsRecord {
   updated_at: string | null;
 }
 
-export type newsSummary = Pick<
+export type NewsSummary = Pick<
   NewsRecord,
   | "id"
   | "title"

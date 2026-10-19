@@ -1,4 +1,4 @@
-import { NewsRecord, newsSummary } from "./types";
+import { NewsRecord, NewsSummary } from "./types";
 import { createClient } from "@/utils/supabase/server";
 
 
@@ -22,7 +22,7 @@ export async function getNews(): Promise<NewsRecord[]> {
 
 
 
-export async function getNewSummaries(): Promise<newsSummary[]> {
+export async function getNewsSummaries(): Promise<NewsSummary[]> {
 const supabase = await createClient();
 
   const { data: newsData, error: newsError } = await supabase

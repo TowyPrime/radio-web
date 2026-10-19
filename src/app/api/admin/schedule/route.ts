@@ -7,26 +7,13 @@ import {
   MARGIN_MS,
   parseLocalDateTime,
 } from "@/lib/schedule/constants";
+import { ScheduleSlotRow } from "@/lib/schedule/types";
 
 interface PlaylistDurationRow {
   tracks: { duration: number };
 }
 
-interface ScheduleSlotRow {
-  id: string;
-  playlist_id: string;
-  starts_at: string;
-  ends_at: string;
-  playlists: { title: string };
-}
 
-interface ScheduleSlotRow {
-  id: string;
-  playlist_id: string;
-  starts_at: string;
-  ends_at: string;
-  playlists: { title: string };
-}
 
 function formatDuration(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60);

@@ -173,7 +173,7 @@ export default function MusicManager({ initialTracks }: MusicManagerProps) {
 
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm(
-      "¿Está seguro de borrar este archivo de música?, esta acción no se puede revertir",
+      "¿Está seguro de borrar este archivo de música? Esta es una acción irreversible",
     );
     if (!confirmed) return;
 
@@ -203,7 +203,7 @@ export default function MusicManager({ initialTracks }: MusicManagerProps) {
         error instanceof AppError
           ? error.message
           : "Ocurrió un problema al procesar tu solicitud, inténtalo de nuevo más tarde.";
-
+          
       notify.error(errorMessage);
     } finally {
       setDeletingId(null);

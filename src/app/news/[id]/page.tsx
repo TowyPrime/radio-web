@@ -1,11 +1,10 @@
-import { notify } from "@/components/toast";
 import { getNewsById } from "@/lib/news/queries";
 import { htmlToPlainText } from "@/lib/news/sanitize";
 import { NewsRecord } from "@/lib/news/types";
 import { UUID_REGEX } from "@/lib/tracks/constants";
 import { STATION_TIME_ZONE } from "@/lib/schedule/constants";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Clock} from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import Link from "next/link";
 
 interface NewsDetailsProps {
@@ -14,29 +13,22 @@ interface NewsDetailsProps {
   }>;
 }
 
-export default async function NewsDEtailsPage({ params }: NewsDetailsProps) {
+export default async function NewsDetailsPage({ params }: NewsDetailsProps) {
   let news: NewsRecord | null = null;
-  let errorMessage: string | null = null;
-  const { id } = await params;
 
-  if (typeof id !== "string" || !UUID_REGEX.test(id)) {
-    errorMessage = "El id especificado no es válido";
-  }
+  const { id } = await params;
+  if (!id) notFound();
+
+  if (typeof id !== "string" || !UUID_REGEX.test(id)) notFound();
 
   try {
     news = await getNewsById(id);
-  } catch (error) {
-    console.error(
-      "Ocurrió un error al consultar la noticia intenta de nuevo",
-      error,
-    );
-    errorMessage = "No se pudo obtener la noticia especificada";
-  }
-
-  if (!news) {
-    errorMessage = "No se pudo enctrar la noticia especificada";
+  } catch {
     notFound();
   }
+
+  if (!news) notFound();
+
   const getLectureMinutes = (news: NewsRecord) => {
     const plainText = htmlToPlainText(news.body || "");
     const words = plainText.trim().split(/\s+/).filter(Boolean);
@@ -53,12 +45,12 @@ export default async function NewsDEtailsPage({ params }: NewsDetailsProps) {
         dateStyle: "long",
         timeStyle: "short",
       }).format(new Date(dateString));
-    } catch{
+    } catch {
       return dateString;
     }
   };
 
- return (
+  return (
     <div className="min-h-[calc(100vh-5rem)] bg-slate-950 text-slate-100 w-full pb-16">
       <main className="max-w-4xl mx-auto px-4 md:px-8 py-8">
         {/* Enlace para volver a la lista de noticias */}
@@ -69,11 +61,6 @@ export default async function NewsDEtailsPage({ params }: NewsDetailsProps) {
           <ArrowLeft className="w-4 h-4" />
           Volver a noticias
         </Link>
-         {errorMessage && (
-          <div className="p-4 mb-6 text-sm text-red-400 bg-red-950/50 border border-red-800 rounded-xl">
-            {errorMessage}
-          </div>
-        )}
 
         <article className="space-y-6">
           {/* Encabezado: Categoría, Título, Meta y Resumen */}

@@ -20,6 +20,6 @@ export default async function CrateNewsPage() {
         <p className="mb-4 text-sm text-red-400">{errorMessage}</p>
       )}
       <NewsManager initialNews={news} />
-    </div>
+    </div>//
   );
 }
