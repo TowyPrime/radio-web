@@ -48,7 +48,7 @@ Estado y decisiones al **2026-10-16**. Este archivo no contiene secretos; las cl
 
 ## Mapa del código (`src/`)
 - `app/page.tsx`: página principal = **Noticias** (aún con `demoNews`) + botón flotante del chat. `app/chat`, `app/live`, `app/contact`, `app/login`, `app/profile`, `app/auth/*`.
-- Admin (protegido por proxy): `app/admin/invite`, `app/music/save` (`MusicManager`: subir/listar/borrar canciones), `app/playlist/create` (`PlaylistManager`: crear/ver/editar/ordenar/renombrar/borrar playlists y agregar canciones), `app/live/start` (hoy solo simulación).
+- Admin (protegido por proxy): `app/admin/invite`, `app/music/save` (`MusicManager`: subir/listar/borrar canciones), `app/playlist/create` (`PlaylistManager`: crear/ver/editar/ordenar/renombrar/borrar playlists y agregar canciones).
 - API admin: `api/admin/{invite, tracks, tracks/upload-url, playlists, playlists/[id], playlists/[id]/tracks/[track_id], schedule, schedule/[id], news, news/[id], news/upload_url}`. Ojo: las canciones de una playlist (agregar `POST`, reordenar `PUT`, listar `GET`) están en `playlists/[id]/route.ts` (URL sin `/tracks`); `news/upload_url` lleva guion bajo a diferencia de `tracks/upload-url`.
 - API pública: `api/schedule` (solo lectura, `service_role`, devuelve solo título/artista/duración/url), `api/messages` (chat), `api/visitor`, `api/account/delete`.
 - `lib/tracks/{constants,functions}.ts` (tipos de archivo permitidos como `Map`, `UUID_REGEX`, límites, `getAudioDuration`, `convertSecondsInMinutes`), `lib/schedule/{constants,playback,server}.ts` (desfase UTC-6 fijo `-06:00`, `parseLocalDateTime`, `getPlaybackPosition`, `isPlaylistOnAir`/`isTrackOnAir`), `lib/news/{constants,sanitize,validate}.ts`.
@@ -63,9 +63,14 @@ Estado y decisiones al **2026-10-16**. Este archivo no contiene secretos; las cl
 - **En curso (público):** `lib/news/queries.ts` (`getNews`, `getNewSummaries` sin `body`, `getNewsById`), tipo `newsSummary = Pick<NewsRecord, ...>` en `lib/news/types.ts`, `app/page.tsx` (lista real, ya escrita) y `app/news/[id]/page.tsx` (detalle, escrito pero con errores por corregir). **Correcciones pendientes en el detalle:** (1) importa `Link` de `next/link` (hoy lo toma de `lucide-react`, que es un ícono); (2) quitar los `notify.error(...)` (el toast es de cliente, no funciona en un Server Component); (3) `getNewsById` lanza error también cuando la noticia no existe: debe lanzar solo si hay `error` y devolver `null` si no hay fila, para que la página llame `notFound()`; (4) quitar clases `prose` (no hay plugin de tipografía). Luego probar: `/` con noticias reales, `/news/<id>`, uuid inválido o inexistente -> 404, y que un `<script>` guardado por API no se ejecute.
 - **Pendiente:** definir categorías con el cliente; aviso de ESLint por `<img>` en lugar de `next/image` (opcional).
 
-## Horarios (TERMINADO y probado; cerrado 2026-10-19)
-- `/admin/schedule` (`components/ScheduleManager.tsx`: crear/listar/cancelar con `/api/admin/schedule`), `lib/schedule/{types,queries}.ts` (`getUpcomingSlots` con service_role), `/live` con horarios reales agrupados por día en hora de Ciudad de México (`export const dynamic = "force-dynamic"` va en `page.tsx`, no en `queries.ts`). Enlace "Programar horarios" en el menú admin. Todo probado a mano y commiteado.
-- Pendiente menor: banner recordatorio semanal en `/admin/schedule`; `router.refresh()` periódico en `/live` (la tarjeta "Al aire" no se actualiza sola); quitar `capitalize` junto a `uppercase` en el encabezado de día; mover `DemoChatMessage` de `data/demo.ts` a `lib/chat/types.ts` (`ChatMessage`) y borrar `demo.ts`.
+## Horarios (TERMINADO y probado; cerrado 2026-10-19; recordatorio 2026-10-21)
+- `/admin/schedule` (`components/ScheduleManager.tsx`: crear/listar/cancelar con `/api/admin/schedule`; llama a `router.refresh()` para que el recordatorio se actualice), `components/ScheduleReminder.tsx` (Server Component: rojo = sin horarios, ámbar = el último termina en < `REMINDER_DAYS`=7 días, verde = cubierto; si falla la BD se muestra un texto neutro), `lib/schedule/{types,queries}.ts` (`getUpcomingSlots` con service_role), `/live` con horarios reales agrupados por día en hora de Ciudad de México (`export const dynamic = "force-dynamic"` va en `page.tsx`, no en `queries.ts`), `components/AutoRefresh.tsx` (client; `router.refresh()` cada 60 s, solo en `/live`).
+- Enlace "Programar horarios" en el menú admin.
+
+## En vivo con YouTube (código listo; pruebas con directo pendientes)
+- `lib/live/youtube.ts` `getYoutubeEmbedUrl()` lee `YOUTUBE_CHANNEL_ID` (solo servidor, regex `^UC[\w-]{22}$`) y `/live` muestra el `<iframe>` `https://www.youtube.com/embed/live_stream?channel=<ID>`. Hoy es el canal de pruebas del desarrollador; al recibir el del cliente se cambia la variable en `.env` y en Vercel (redeploy).
+- "Iniciar live" del menú ahora abre `https://studio.youtube.com` en otra pestaña. Se borró la simulación `/live/start` (carpeta y entrada en `proxy.ts`).
+- Falta probar con un directo público real (YouTube habilita el en vivo en la cuenta de pruebas ~2026-10-22) y decidir qué hacer si suenan a la vez la radio programada y el directo.
 
 ## Pendiente / decisiones del cliente
 - Se **eliminaron** historias, likes y comentarios (código y tablas). Se **queda** el chat en vivo y el sistema de visitantes con nickname.

@@ -166,6 +166,7 @@ export default function ScheduleManager() {
       }
 
       loadSlots();
+      router.refresh();
       notify.success("Se eliminó correctamente el horario");
     } catch (error: unknown) {
       if (!(error instanceof AppError)) {
