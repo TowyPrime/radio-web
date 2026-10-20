@@ -2,6 +2,8 @@ import ChatPanel from "@/components/ChatPanel";
 import { getUpcomingSlots } from "@/lib/schedule/queries";
 import { Slot } from "@/lib/schedule/types";
 import { STATION_TIME_ZONE } from "@/lib/schedule/constants";
+import AutoRefresh from "@/components/AutoRefresh";
+import { getYoutubeEmbedUrl } from "@/lib/live/youtube";
 
 export const dynamic = "force-dynamic";
 
@@ -68,8 +70,11 @@ export default async function LivePage() {
     slotsByDay.set(dayKey, daySlots);
   }
 
+  const youtubeEmbedUrl = getYoutubeEmbedUrl();
+
   return (
     <main className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+      <AutoRefresh intervalSeconds={60} />
       <h1 className="text-3xl font-bold text-white mb-1">
         Nuestra Emisora en Vivo
       </h1>
@@ -82,6 +87,21 @@ export default async function LivePage() {
       {errorMessage && (
         <p className="mb-4 text-sm text-red-400">{errorMessage}</p>
       )}
+
+      {youtubeEmbedUrl ? (
+        <div className="mb-8 w-full max-w-4xl mx-auto">
+          <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-black">
+            <iframe
+              src={youtubeEmbedUrl}
+              title="Transmisión en vivo de Youtube"
+              className="absolute top-0 left-0 w-full h-full border-0"
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Columna izquierda: programa actual + programación */}
@@ -99,7 +119,7 @@ export default async function LivePage() {
                 {liveSlot.playlist_title}
               </h2>
               <p className="text-blue-200 mt-1">
-                Comienzo: {formatFullDateTime(liveSlot.starts_at)} hasta: {" "}
+                Comienzo: {formatFullDateTime(liveSlot.starts_at)} hasta:{" "}
                 {formatTime(liveSlot.ends_at)}
               </p>
               <p className="text-sm text-blue-100/80 mt-4 max-w-md">
@@ -142,7 +162,7 @@ export default async function LivePage() {
                 {Array.from(slotsByDay.entries()).map(
                   ([dayLabel, daySlots]) => (
                     <div key={dayLabel} className="space-y-3">
-                      <h3 className="text-xs font-semibold text-blue-400 uppercase tracking-wider capitalize">
+                      <h3 className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
                         {dayLabel}
                       </h3>
                       <ul className="divide-y divide-slate-800/60 bg-slate-950/40 rounded-xl px-4 border border-slate-800/50">

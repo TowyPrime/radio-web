@@ -197,14 +197,16 @@ export default function Navbar({
                           Panel Admin
                         </div>
 
-                        <Link
-                          href="/live/start"
+                        <a
+                          href="https://studio.youtube.com"
                           onClick={() => setIsMenuOpen(false)}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-800 transition-colors"
                         >
                           <Video className="w-4 h-4 text-blue-400" />
                           <span>Iniciar live</span>
-                        </Link>
+                        </a>
 
                         <Link
                           href="/music/save"

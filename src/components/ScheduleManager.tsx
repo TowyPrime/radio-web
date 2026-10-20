@@ -7,6 +7,7 @@ import { AppError } from "@/data/AppError";
 import { Slot } from "@/lib/schedule/types";
 import { Trash2 } from "lucide-react";
 import { STATION_TIME_ZONE } from "@/lib/schedule/constants";
+import { useRouter } from "next/navigation";
 
 const dateFormatter = new Intl.DateTimeFormat("es-ES", {
   timeZone: STATION_TIME_ZONE,
@@ -22,6 +23,8 @@ export default function ScheduleManager() {
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const router = useRouter();
 
   const loadSlots = useCallback(async () => {
     try {
@@ -67,6 +70,8 @@ export default function ScheduleManager() {
     return () => clearTimeout(timer);
   }, [loadSlots]);
 
+
+
   const cleanFields = () => {
     setStartsAt("");
     setEndsAt("");
@@ -110,6 +115,7 @@ export default function ScheduleManager() {
       notify.success("El horario se creó correctamente");
       cleanFields();
       loadSlots();
+      router.refresh();
     } catch (error: unknown) {
      if (!(error instanceof AppError)) {
         console.error("Error al agregar el horario:", error);

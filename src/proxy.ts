@@ -12,7 +12,7 @@ export async function proxy(request: NextRequest) {
   await ensureAdminVisitor(request, supabaseResponse, user);
 
   const pathname = request.nextUrl.pathname;
-  const isProtectRoute = ["/music", "/playlist", "/live/start", "/admin"];
+  const isProtectRoute = ["/music", "/playlist", "/admin"];
 
   const isProtected = isProtectRoute.some((route) =>
     pathname.startsWith(route),

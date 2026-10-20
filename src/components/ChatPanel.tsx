@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Send, Users } from "lucide-react";
-import { type DemoChatMessage } from "@/data/demo";
+import { ChatMessage } from "@/lib/chat/types";
 import { useVisitor } from "@/context/VisitorContext";
 import { createClient } from "@/utils/supabase/client";
 import { notify } from "./toast";
@@ -12,7 +12,7 @@ interface ChatPanelProps {
 }
 
 export default function ChatPanel({ className = "" }: ChatPanelProps) {
-  const [messages, setMessages] = useState<DemoChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [listeners, setListeners] = useState(0);
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
@@ -55,7 +55,7 @@ export default function ChatPanel({ className = "" }: ChatPanelProps) {
           [],
       );
 
-      const loadedMessages: DemoChatMessage[] = messagesList.map((row) => {
+      const loadedMessages: ChatMessage[] = messagesList.map((row) => {
         const authorName = usernameMap.get(row.visitor_uid) ?? "visitante";
 
         const formattedTime = new Date(row.created_at).toLocaleTimeString(
@@ -103,7 +103,7 @@ const channel = supabase
             minute: "2-digit",
           });
 
-          const messageItem: DemoChatMessage = {
+          const messageItem: ChatMessage = {
             id: newMessage.id,
             author: authorName,
             text: newMessage.message,
