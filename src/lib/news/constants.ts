@@ -6,13 +6,24 @@ export const ALLOWED_IMAGE_TYPES = new Map<string, string>([
   ["image/webp", "webp"],
 ]);
 
+// Lista cerrada de categorías (definida con el cliente). En pantalla se muestran en
+// mayúsculas con CSS (`uppercase`), pero se guardan tal cual están aquí.
 export const NEWS_CATEGORIES = [
-  "EMISORA",
-  "MÚSICA",
-  "EVENTOS",
-  "COMUNIDAD",
-  "OTROS",
+  "Moda",
+  "Música",
+  "Deportes",
+  "Espectáculo",
+  "Salud",
 ] as const;
+
+export type NewsCategory = (typeof NEWS_CATEGORIES)[number];
+
+export function isNewsCategory(value: unknown): value is NewsCategory {
+  return (
+    typeof value === "string" &&
+    (NEWS_CATEGORIES as readonly string[]).includes(value)
+  );
+}
 
 export const NEWS_LIMITS = {
   title: 120,

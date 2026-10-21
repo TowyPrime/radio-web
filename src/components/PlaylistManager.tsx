@@ -19,6 +19,12 @@ import {
 } from "lucide-react";
 import { convertSecondsInMinutes } from "@/lib/tracks/functions";
 import { MAX_TRACKS_PER_PLAYLIST } from "@/lib/tracks/constants";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+// Botones de solo icono de las listas (subir, bajar, quitar...): discretos hasta el hover
+const ICON_BUTTON_CLASSES =
+  "text-ink-500 hover:bg-transparent hover:text-white disabled:opacity-30";
 
 interface PlaylistManagerProps {
   initialTracks: TrackRecord[];
@@ -450,23 +456,23 @@ export default function PlaylistManager({
   return (
     <main className="max-w-4xl mx-auto px-4 md:px-8 py-8">
       <h1 className="text-3xl font-bold text-white mb-2">Crear playlist</h1>
-      <p className="text-slate-400 text-sm mb-6">
+      <p className="text-ink-400 text-sm mb-6">
         Arma una lista con la música de la biblioteca para reproducirla al aire.
       </p>
 
       <div className="grid gap-6 md:grid-cols-5">
         <form
           onSubmit={handleSubmit}
-          className="md:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4"
+          className="md:col-span-3 bg-ink-900 border border-ink-800 rounded-2xl p-6 space-y-4"
         >
-          <input
+          <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Nombre de la playlist"
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+            aria-label="Nombre de la playlist"
           />
 
-          <ul className="divide-y divide-slate-800 max-h-96 overflow-y-auto">
+          <ul className="divide-y divide-ink-800 max-h-96 overflow-y-auto">
             {initialTracks.map((t) => {
               const isOn = selected.has(t.id);
               return (
@@ -474,13 +480,13 @@ export default function PlaylistManager({
                   <button
                     type="button"
                     onClick={() => toggle(t.id)}
-                    className="w-full flex items-center gap-3 py-3 text-left cursor-pointer hover:bg-slate-800/40 px-2 rounded-lg transition-colors"
+                    className="w-full flex items-center gap-3 py-3 text-left cursor-pointer hover:bg-ink-800/40 px-2 rounded-lg transition-colors"
                   >
                     <span
                       className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ${
                         isOn
-                          ? "bg-blue-600 border-blue-600"
-                          : "border-slate-600"
+                          ? "bg-brand-700 border-brand-500"
+                          : "border-ink-600"
                       }`}
                     >
                       {isOn && <Check className="w-3.5 h-3.5 text-white" />}
@@ -489,11 +495,11 @@ export default function PlaylistManager({
                       <span className="block text-sm text-white truncate">
                         {t.title}
                       </span>
-                      <span className="block text-xs text-slate-500 truncate">
+                      <span className="block text-xs text-ink-500 truncate">
                         {t.artist}
                       </span>
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-ink-500">
                       {convertSecondsInMinutes(t.duration)}
                     </span>
                   </button>
@@ -502,18 +508,19 @@ export default function PlaylistManager({
             })}
           </ul>
 
-          <button
+          <Button
             type="submit"
+            size="md"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer"
+            className="w-full"
           >
             {isSubmitting
               ? "Creando..."
               : `Crear playlist (${selected.size} canciones)`}
-          </button>
+          </Button>
         </form>
 
-        <section className="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
+        <section className="md:col-span-2 bg-ink-900 border border-ink-800 rounded-2xl p-6 h-fit">
           <h2 className="font-semibold text-white mb-4">Mis playlists</h2>
           <ul className="space-y-3">
             {playlists.map((p) => (
@@ -521,16 +528,16 @@ export default function PlaylistManager({
                 <button
                   type="button"
                   onClick={() => handleSelectPlaylist(p.id)}
-                  className={`w-full flex items-center gap-3 text-left cursor-pointer rounded-lg p-2 transition-colors hover:bg-slate-800/40 ${
-                    selectedPlaylistId === p.id ? "bg-slate-800/60" : ""
+                  className={`w-full flex items-center gap-3 text-left cursor-pointer rounded-lg p-2 transition-colors hover:bg-ink-800/40 ${
+                    selectedPlaylistId === p.id ? "bg-ink-800/60" : ""
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-600 to-brand-900 flex items-center justify-center">
                     <ListMusic className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <p className="text-sm text-white">{p.title}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-ink-500">
                       {p.track_count} canciones
                     </p>
                   </div>
@@ -541,32 +548,29 @@ export default function PlaylistManager({
         </section>
       </div>
       {selectedPlaylistId && (
-        <section className="mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <section className="mt-6 bg-ink-900 border border-ink-800 rounded-2xl p-6">
           <div className="flex items-center justify-between gap-3 mb-4">
             {isEditingTitle ? (
               <form
                 onSubmit={handleRenamePlaylist}
                 className="flex flex-1 items-center gap-2"
               >
-                <input
+                <Input
                   value={editedTitle}
                   onChange={(e) => setEditedTitle(e.target.value)}
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                  aria-label="Nuevo nombre de la playlist"
+                  className="flex-1"
                 />
-                <button
-                  type="submit"
-                  disabled={isUpdatingPlaylist}
-                  className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-xl text-sm cursor-pointer"
-                >
+                <Button type="submit" disabled={isUpdatingPlaylist}>
                   Guardar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setIsEditingTitle(false)}
-                  className="text-slate-400 hover:text-white text-sm cursor-pointer"
                 >
                   Cancelar
-                </button>
+                </Button>
               </form>
             ) : (
               <>
@@ -574,116 +578,128 @@ export default function PlaylistManager({
                   {playlists.find((p) => p.id === selectedPlaylistId)?.title}
                 </h2>
                 <div className="flex items-center gap-1">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={handleStartRename}
                     disabled={isUpdatingPlaylist}
                     aria-label="Renombrar playlist"
-                    className="p-1 text-slate-500 hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className={ICON_BUTTON_CLASSES}
                   >
                     <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={handleDeletePlaylist}
                     disabled={isUpdatingPlaylist}
                     aria-label="Borrar playlist"
-                    className="p-1 text-slate-500 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className={`${ICON_BUTTON_CLASSES} hover:text-red-400`}
                   >
                     <Trash2 className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
           </div>
 
           {isLoadingTracks ? (
-            <p className="text-sm text-slate-400">Cargando canciones...</p>
+            <p className="text-sm text-ink-400">Cargando canciones...</p>
           ) : playlistTracks.length === 0 ? (
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-ink-400">
               Esta playlist aún no tiene canciones.
             </p>
           ) : (
-            <ol className="divide-y divide-slate-800">
+            <ol className="divide-y divide-ink-800">
               {playlistTracks.map((t, index) => (
                 <li key={t.track_id} className="flex items-center gap-3 py-3">
-                  <span className="w-6 text-xs text-slate-500">
+                  <span className="w-6 text-xs text-ink-500">
                     {index + 1}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-white truncate">{t.title}</p>
-                    <p className="text-xs text-slate-500 truncate">
+                    <p className="text-xs text-ink-500 truncate">
                       {t.artist}
                     </p>
                   </div>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-ink-500">
                     {convertSecondsInMinutes(t.duration)}
                   </span>
                   <div className="flex items-center gap-1">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => handleMoveTrack(index, -1)}
                       disabled={isUpdatingTracks || index === 0}
                       aria-label={`Subir ${t.title}`}
-                      className="p-1 text-slate-500 hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                      className={ICON_BUTTON_CLASSES}
                     >
                       <ChevronUp className="w-4 h-4" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => handleMoveTrack(index, 1)}
                       disabled={
                         isUpdatingTracks || index === playlistTracks.length - 1
                       }
                       aria-label={`Bajar ${t.title}`}
-                      className="p-1 text-slate-500 hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                      className={ICON_BUTTON_CLASSES}
                     >
                       <ChevronDown className="w-4 h-4" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => handleRemoveTrack(t.track_id)}
                       disabled={isUpdatingTracks}
                       aria-label={`Quitar ${t.title}`}
-                      className="p-1 text-slate-500 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                      className={`${ICON_BUTTON_CLASSES} hover:text-red-400`}
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </li>
               ))}
             </ol>
           )}
           {!isLoadingTracks && (
-  <div className="mt-6 pt-6 border-t border-slate-800">
-    <h3 className="text-sm font-semibold text-slate-300 mb-3">
+  <div className="mt-6 pt-6 border-t border-ink-800">
+    <h3 className="text-sm font-semibold text-ink-300 mb-3">
       Agregar canciones
     </h3>
 
     {availableTracks.length === 0 ? (
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-ink-400">
         No hay más canciones de la biblioteca para agregar.
       </p>
     ) : (
-      <ul className="divide-y divide-slate-800 max-h-64 overflow-y-auto">
+      <ul className="divide-y divide-ink-800 max-h-64 overflow-y-auto">
         {availableTracks.map((t) => (
           <li key={t.id} className="flex items-center gap-3 py-2">
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white truncate">{t.title}</p>
-              <p className="text-xs text-slate-500 truncate">{t.artist}</p>
+              <p className="text-xs text-ink-500 truncate">{t.artist}</p>
             </div>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-ink-500">
               {convertSecondsInMinutes(t.duration)}
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={() => handleAddTrack(t)}
               disabled={isUpdatingTracks}
               aria-label={`Agregar ${t.title}`}
-              className="p-1 text-slate-500 hover:text-blue-400 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              className={`${ICON_BUTTON_CLASSES} hover:text-brand-400`}
             >
               <Plus className="w-4 h-4" />
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

@@ -239,11 +239,11 @@ const channel = supabase
 
   return (
     <section
-      className={`flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden ${className}`}
+      className={`flex flex-col bg-ink-900 border border-ink-800 rounded-2xl overflow-hidden ${className}`}
     >
-      <header className="flex items-center justify-between px-5 py-3 border-b border-slate-800">
+      <header className="flex items-center justify-between px-5 py-3 border-b border-ink-800">
         <h2 className="font-semibold text-white">Chat en vivo</h2>
-        <span className="flex items-center gap-1.5 text-xs text-slate-400">
+        <span className="flex items-center gap-1.5 text-xs text-ink-400">
           <Users className="w-4 h-4" />
           {listeners} oyentes
         </span>
@@ -260,7 +260,7 @@ const channel = supabase
           >
             <div className="flex items-baseline gap-2 mb-0.5">
               <span
-                className={`text-xs font-semibold ${m.role === "locutor" ? "text-red-400" : "text-blue-400"}`}
+                className={`text-xs font-semibold ${m.role === "locutor" ? "text-red-400" : "text-brand-400"}`}
               >
                 {m.author}
               </span>
@@ -269,13 +269,13 @@ const channel = supabase
                   Locutor
                 </span>
               )}
-              <span className="text-[10px] text-slate-500">{m.time}</span>
+              <span className="text-[10px] text-ink-500">{m.time}</span>
             </div>
             <p
               className={`text-sm px-3.5 py-2 rounded-2xl max-w-[85%] ${
                 m.mine
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-800 text-slate-200"
+                  ? "bg-brand-700 text-white"
+                  : "bg-ink-800 text-ink-200"
               }`}
             >
               {m.text}
@@ -286,17 +286,17 @@ const channel = supabase
 
       <form
         onSubmit={send}
-        className="flex gap-2 p-3 border-t border-slate-800"
+        className="flex gap-2 p-3 border-t border-ink-800"
       >
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Escribe un mensaje..."
-          className="flex-1 bg-slate-950 border border-slate-800 rounded-full px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+          className="flex-1 bg-ink-950 border border-ink-800 rounded-full px-4 py-2 text-sm text-white placeholder-ink-500 focus:outline-none focus:border-brand-400 transition-colors"
         />
         <button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-500 text-white p-2.5 rounded-full transition-colors cursor-pointer"
+          className="bg-brand-700 hover:bg-brand-600 text-white p-2.5 rounded-full transition-colors cursor-pointer"
           aria-label="Enviar mensaje"
         >
           <Send className="w-4 h-4" />

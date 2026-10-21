@@ -2,6 +2,9 @@ import NewsManager from "@/components/NewsManager";
 import { getNews } from "@/lib/news/queries";
 import { NewsRecord } from "@/lib/news/types";
 
+// Lee datos con la sesión (cookies): siempre se genera en cada petición
+export const dynamic = "force-dynamic";
+
 export default async function CrateNewsPage() {
   let news: NewsRecord[] = [];
   let errorMessage: string | null = null;

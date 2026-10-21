@@ -5,19 +5,32 @@ import { AudioProvider } from "@/context/AudioContext";
 import { VisitorProvider } from "@/context/VisitorContext";
 import GlobalPlayer from "@/components/GlobalPlayer";
 import { VisitorNicknameDialog } from "@/components/VisitorNicknameDialog";
+import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { getSiteUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
-export const metadata = {
+export const metadata: Metadata = {
+  metadataBase: getSiteUrl(),
   title: {
-    default: "Con el píe derecho radio",
-    template: "%s | Con el píe derecho radio",
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
   },
-
-  description: "La mejor emisora y portal de noticias",
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "es_MX",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [{ url: "/icon.jpg", alt: SITE_NAME }],
+  },
+  twitter: {
+    card: "summary",
+  },
 };
 
 export default async function RootLayout({
@@ -29,7 +42,6 @@ export default async function RootLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
 
   // Leemos la cookie del visitante en el servidor
   let visitor = null;
@@ -55,7 +67,7 @@ export default async function RootLayout({
 
   return (
     <html lang="es" className={cn("font-sans", geist.variable)}>
-      <body className="bg-slate-950 text-slate-100 min-h-screen m-0 p-0 overflow-x-hidden">
+      <body className="bg-ink-950 text-ink-100 min-h-screen m-0 p-0 overflow-x-hidden pb-24 sm:pb-0">
         <AudioProvider>
           {/* Envolvemos la app con el VisitorProvider pasando el initialUsername resuelto en el servidor */}
           <VisitorProvider
@@ -64,10 +76,8 @@ export default async function RootLayout({
           >
             <Navbar user={user} fechaFormateada={fechaFormateada} />
 
-            {/* Reproductor global: se mantiene visible (y sonando) al navegar entre páginas */}
-            <div className="sticky top-20 z-40">
-              <GlobalPlayer />
-            </div>
+            {/* Reproductor global flotante: se mantiene visible (y sonando) al navegar entre páginas */}
+            <GlobalPlayer />
 
             {/* Renderiza el contenido de la página directamente sin restricciones de contenedor global */}
             {children}

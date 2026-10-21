@@ -29,8 +29,8 @@ function ToolbarButton({
       onClick={onClick}
       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
         active
-          ? "bg-slate-800 border-slate-700 text-blue-400"
-          : "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white"
+          ? "bg-ink-800 border-ink-700 text-brand-400"
+          : "bg-ink-900 border-ink-800 text-ink-300 hover:bg-ink-800 hover:text-white"
       } ${className}`}
     >
       {label}
@@ -56,7 +56,7 @@ export default function NewsEditor({ value, onChange }: NewsEditorProps) {
     editorProps: {
       attributes: {
         class:
-          "news-content min-h-[250px] p-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-200 focus:outline-none focus:border-slate-700",
+          "news-content min-h-[250px] p-4 bg-ink-900 border border-ink-800 rounded-2xl text-ink-200 focus:outline-none focus:border-ink-700",
       },
     },
   });
@@ -66,7 +66,7 @@ export default function NewsEditor({ value, onChange }: NewsEditorProps) {
   return (
     <div className="space-y-3">
       {/* Barra de herramientas */}
-      <div className="flex flex-wrap gap-1.5 bg-slate-950 p-2 rounded-2xl border border-slate-800">
+      <div className="flex flex-wrap gap-1.5 bg-ink-950 p-2 rounded-2xl border border-ink-800">
         <ToolbarButton
           label="B"
           active={editor.isActive("bold")}

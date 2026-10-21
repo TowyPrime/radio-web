@@ -75,14 +75,14 @@ export default function Navbar({
   }, []);
 
   return (
-    <header className="bg-slate-950 backdrop-blur sticky top-0 z-50 w-full">
-      <div className="w-full px-4 h-20 flex items-center justify-between gap-4">
+    <header className="bg-ink-950 backdrop-blur sticky top-0 z-50 w-full">
+      <div className="w-full px-4 h-20 flex items-center justify-between gap-2 sm:gap-4">
         {/* Logo y Noticias */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           <Link
             href="/"
             onClick={onLogoClick}
-            className="flex items-center gap-2 group cursor-pointer focus:outline-none"
+            className="flex shrink-0 items-center gap-2 group cursor-pointer focus:outline-none"
             title="Ir al inicio"
           >
             <Image
@@ -91,21 +91,21 @@ export default function Navbar({
               width={40}
               height={40}
               unoptimized
-              className="w-10 h-10 rounded-full object-cover border border-slate-700 group-hover:border-blue-500 transition-colors"
+              className="w-10 h-10 rounded-full object-cover border border-ink-700 group-hover:border-brand-400 transition-colors"
             />
           </Link>
 
           <Link
             href="/"
             onClick={onNewsClick}
-            className="text-slate-300 hover:text-white transition-colors font-medium text-sm md:text-base cursor-pointer"
+            className="whitespace-nowrap text-ink-300 hover:text-white transition-colors font-medium text-sm md:text-base cursor-pointer"
           >
             Noticias
           </Link>
 
           <Link
             href="/live"
-            className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors font-medium text-sm md:text-base cursor-pointer"
+            className="flex items-center gap-2 whitespace-nowrap text-ink-300 hover:text-white transition-colors font-medium text-sm md:text-base cursor-pointer"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -117,27 +117,27 @@ export default function Navbar({
 
         {/* Buscador */}
         <div className="hidden md:flex items-center relative w-64">
-          <Search className="absolute left-3 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 w-4 h-4 text-ink-400" />
           <input
             type="text"
             placeholder="Buscar en la página..."
-            className="w-full bg-slate-800 border border-slate-700 rounded-full pl-9 pr-4 py-1.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-ink-800 border border-ink-700 rounded-full pl-9 pr-4 py-1.5 text-sm text-white placeholder-ink-400 focus:outline-none focus:border-brand-400 transition-colors"
           />
         </div>
 
         {/* Fecha */}
-        <div className="hidden lg:block text-center text-sm font-medium text-slate-400 bg-slate-800/40 px-4 py-1.5 rounded-full border border-slate-800">
+        <div className="hidden lg:block text-center text-sm font-medium text-ink-400 bg-ink-800/40 px-4 py-1.5 rounded-full border border-ink-800">
           {fechaFormateada}
         </div>
 
         {/* Contacto y Perfil/Acceso */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           <Link
             href="/contact"
             onClick={onContactClick}
-            className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors text-sm font-medium cursor-pointer"
+            className="flex items-center gap-2 text-ink-300 hover:text-white transition-colors text-sm font-medium cursor-pointer"
           >
-            <Mail className="w-4 h-4 text-blue-400" />
+            <Mail className="w-4 h-4 text-brand-400" />
             <span className="hidden sm:inline">Contacto</span>
           </Link>
 
@@ -156,10 +156,10 @@ export default function Navbar({
                       alt="Avatar"
                       width={36}
                       height={36}
-                      className="rounded-full border border-slate-700 group-hover:border-blue-500 transition-colors object-cover"
+                      className="rounded-full border border-ink-700 group-hover:border-brand-400 transition-colors object-cover"
                     />
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm border border-slate-700">
+                    <div className="w-9 h-9 rounded-full bg-brand-700 flex items-center justify-center text-white font-bold text-sm border border-ink-700">
                       {user.email?.charAt(0).toUpperCase() || (
                         <User className="w-4 h-4" />
                       )}
@@ -169,9 +169,9 @@ export default function Navbar({
 
                 {/* Popup Menú */}
                 {isMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-xl py-2 z-50 text-slate-200">
-                    <div className="px-4 py-2 border-b border-slate-800 mb-1">
-                      <p className="text-xs text-slate-400 truncate">
+                  <div className="absolute right-0 mt-2 w-56 bg-ink-900 border border-ink-700 rounded-xl shadow-xl py-2 z-50 text-ink-200">
+                    <div className="px-4 py-2 border-b border-ink-800 mb-1">
+                      <p className="text-xs text-ink-400 truncate">
                         Conectado como
                       </p>
                       <p className="text-sm font-medium text-white truncate">
@@ -183,17 +183,17 @@ export default function Navbar({
                     <Link
                       href="/profile"
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-800 transition-colors"
+                      className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-ink-800 transition-colors"
                     >
-                      <User className="w-4 h-4 text-slate-400" />
+                      <User className="w-4 h-4 text-ink-400" />
                       <span>Ver Perfil</span>
                     </Link>
 
                     {/* Opciones exclusivas para Administradores basados en la tabla profiles */}
                     {isAdmin && (
                       <>
-                        <div className="my-1 border-t border-slate-800"></div>
-                        <div className="px-4 py-1 text-[10px] uppercase font-bold tracking-wider text-blue-400">
+                        <div className="my-1 border-t border-ink-800"></div>
+                        <div className="px-4 py-1 text-[10px] uppercase font-bold tracking-wider text-brand-400">
                           Panel Admin
                         </div>
 
@@ -202,49 +202,49 @@ export default function Navbar({
                           onClick={() => setIsMenuOpen(false)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-800 transition-colors"
+                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-ink-800 transition-colors"
                         >
-                          <Video className="w-4 h-4 text-blue-400" />
+                          <Video className="w-4 h-4 text-brand-400" />
                           <span>Iniciar live</span>
                         </a>
 
                         <Link
                           href="/music/save"
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-800 transition-colors"
+                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-ink-800 transition-colors"
                         >
-                          <Music className="w-4 h-4 text-blue-400" />
+                          <Music className="w-4 h-4 text-brand-400" />
                           <span>Guardar música</span>
                         </Link>
 
                         <Link
                           href="/playlist/create"
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-800 transition-colors"
+                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-ink-800 transition-colors"
                         >
-                          <ListPlus className="w-4 h-4 text-blue-400" />
+                          <ListPlus className="w-4 h-4 text-brand-400" />
                           <span>Crear playlist</span>
                         </Link>
                         <Link
                         href="/admin/schedule"
                         onClick={( ) => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-800 transition-colors"
+                        className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-ink-800 transition-colors"
                         >
-                          <CalendarClock className="w-4 h-4 text-blue-400" />
+                          <CalendarClock className="w-4 h-4 text-brand-400" />
                           Crear Horario
                         </Link>
                         <Link
                           href="/admin/news"
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-800 transition-colors"
+                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-ink-800 transition-colors"
                         >
-                          <Newspaper className="w-4 h-4 text-blue-400"/>
+                          <Newspaper className="w-4 h-4 text-brand-400"/>
                           <span>Crear noticia</span>
                         </Link>
                       </>
                     )}
 
-                    <div className="my-1 border-t border-slate-800"></div>
+                    <div className="my-1 border-t border-ink-800"></div>
 
                     {/* Opción: Cerrar sesión */}
                     <button
@@ -258,7 +258,7 @@ export default function Navbar({
                         router.push("/");
                         router.refresh();
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-ink-800 transition-colors text-left"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Cerrar sesión</span>
@@ -270,10 +270,12 @@ export default function Navbar({
               <Link
                 href="/login"
                 onClick={onAuthClick}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer"
+                aria-label="Acceder"
+                className="flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white px-3 min-[360px]:px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer"
               >
                 <LogIn className="w-4 h-4" />
-                <span>Acceder</span>
+                {/* En pantallas muy estrechas (< 360px) solo se muestra el icono */}
+                <span className="hidden min-[360px]:inline">Acceder</span>
               </Link>
             )}
           </div>

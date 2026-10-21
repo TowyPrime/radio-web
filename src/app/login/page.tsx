@@ -61,16 +61,16 @@ export default function LoginPage() {
  
 
   return (
-    <main className="min-h-[calc(100vh-5rem)] flex items-center justify-center p-4 bg-slate-950">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 text-white rounded-2xl shadow-2xl p-8">
+    <main className="min-h-[calc(100vh-5rem)] flex items-center justify-center p-4 bg-ink-950">
+      <div className="w-full max-w-md bg-ink-900 border border-ink-800 text-white rounded-2xl shadow-2xl p-8">
         
         {/* Cabecera del formulario */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-600/10 text-blue-400 mb-3 border border-blue-500/20">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-400/10 text-brand-400 mb-3 border border-brand-400/20">
             <LogIn className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-bold text-white">Bienvenido de nuevo</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-ink-400 mt-1">
             Ingresa tus credenciales para acceder a tu cuenta.
           </p>
         </div>
@@ -78,7 +78,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="space-y-4">
           <FieldGroup className="space-y-4">
             <Field>
-              <Label htmlFor="email" className="text-slate-300 text-sm font-medium">
+              <Label htmlFor="email" className="text-ink-300 text-sm font-medium">
                 Correo electrónico
               </Label>
               <Input 
@@ -89,12 +89,12 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 
-                className="mt-1 bg-slate-950 border-slate-800 text-white placeholder:text-slate-600 focus-visible:ring-blue-500"
+                className="mt-1 bg-ink-950 border-ink-800 text-white placeholder:text-ink-600 focus-visible:ring-brand-400"
               />
             </Field>
 
             <Field>
-              <Label htmlFor="password" className="text-slate-300 text-sm font-medium">
+              <Label htmlFor="password" className="text-ink-300 text-sm font-medium">
                 Contraseña
               </Label>
               {/* Contenedor relativo para posicionar el icono */}
@@ -107,12 +107,12 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required 
-                  className="bg-slate-950 border-slate-800 text-white placeholder:text-slate-600 focus-visible:ring-blue-500 pr-10" // Añadimos pr-10 para dejar espacio al icono
+                  className="bg-ink-950 border-ink-800 text-white placeholder:text-ink-600 focus-visible:ring-brand-400 pr-10" // Añadimos pr-10 para dejar espacio al icono
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-white transition-colors cursor-pointer"
                   tabIndex={-1} // Evita que se enfoque con la tecla Tab de forma molesta
                   title={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
                 >
@@ -135,7 +135,7 @@ export default function LoginPage() {
           <Button 
             type="submit" 
             disabled={loading} 
-            className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-xl transition-colors cursor-pointer border-0"
+            className="w-full mt-2 bg-brand-700 hover:bg-brand-800 text-white font-medium py-2 rounded-xl transition-colors cursor-pointer border-0"
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">

@@ -1,81 +1,194 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useAudio } from '../context/AudioContext';
-import { STATION_TIME_ZONE } from '@/lib/schedule/constants';
+import React, { useEffect, useState } from "react";
+import {
+  GripVertical,
+  Maximize2,
+  Minimize2,
+  Music,
+  Pause,
+  Play,
+} from "lucide-react";
+import { useAudio } from "../context/AudioContext";
+import { useDraggablePosition } from "@/hooks/useDraggablePosition";
+import { STATION_TIME_ZONE } from "@/lib/schedule/constants";
 
 function formatNext(startsAt: string): string {
-  return new Date(startsAt).toLocaleString('es-MX', {
+  return new Date(startsAt).toLocaleString("es-MX", {
     timeZone: STATION_TIME_ZONE,
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
+const EQUALIZER_DELAYS_SECONDS = [0, 0.25, 0.5];
+const PLAYER_POSITION_STORAGE_KEY = "radio-player-position";
+const PLAYER_MINIMIZED_STORAGE_KEY = "radio-player-minimized";
+// Navbar (h-20 = 80px) más un pequeño margen
+const PLAYER_MIN_TOP_PX = 88;
+
 export default function GlobalPlayer() {
-  const { isPlaying, status, programTitle, currentTrack, nextProgram, togglePlay } =
-    useAudio();
+  const {
+    isPlaying,
+    status,
+    programTitle,
+    currentTrack,
+    nextProgram,
+    togglePlay,
+  } = useAudio();
 
-  const canPlay = status === 'on-air';
+  const { elementRef, position, isDragging, handleProps } =
+    useDraggablePosition<HTMLDivElement>({
+      storageKey: PLAYER_POSITION_STORAGE_KEY,
+      minTopPx: PLAYER_MIN_TOP_PX,
+    });
 
-  let label = 'Conectando...';
-  let title = '';
-  let subtitle = '';
+  const [isMinimized, setIsMinimized] = useState(false);
 
-  if (status === 'on-air') {
-    label = `🎵 En el aire · ${programTitle ?? ''}`;
-    title = currentTrack?.title ?? 'Pulsa play para escuchar';
-    subtitle = currentTrack?.artist ?? '';
-  } else if (status === 'off-air') {
-    label = 'Sin transmisión';
-    title = 'No hay transmisión en este momento';
+  // Se recuerda si el usuario lo dejó minimizado (el primer dibujo siempre es el expandido,
+  // igual en servidor y cliente, y luego se aplica lo guardado)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        if (window.localStorage.getItem(PLAYER_MINIMIZED_STORAGE_KEY) === "1") {
+          setIsMinimized(true);
+        }
+      } catch {
+        // Sin almacenamiento disponible: se queda expandido
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const toggleMinimized = () => {
+    const next = !isMinimized;
+    setIsMinimized(next);
+
+    try {
+      window.localStorage.setItem(PLAYER_MINIMIZED_STORAGE_KEY, next ? "1" : "0");
+    } catch {
+      // Solo no se recuerda la preferencia
+    }
+  };
+
+  const canPlay = status === "on-air";
+
+  let label = "Conectando...";
+  let title = "";
+  let subtitle = "";
+
+  if (status === "on-air") {
+    label = `En el aire · ${programTitle ?? ""}`;
+    title = currentTrack?.title ?? "Pulsa play para escuchar";
+    subtitle = currentTrack?.artist ?? "";
+  } else if (status === "off-air") {
+    label = "Sin transmisión";
+    title = "No hay transmisión en este momento";
     subtitle = nextProgram
       ? `Próximo: ${nextProgram.playlist_title} · ${formatNext(nextProgram.starts_at)}`
-      : '';
+      : "";
   }
 
+  // Expandido, móvil: fijo abajo y a lo ancho. Escritorio: tarjeta angosta arriba a la
+  // derecha, bajo el Navbar, que el usuario puede arrastrar (su posición se recuerda).
+  // Minimizado: cápsula compacta pegada a la derecha (en móvil, abajo).
+  const sizeClasses = isMinimized ? "right-4" : "left-4 right-4 sm:w-96";
+
   return (
-    <div className="w-full bg-blue-900 border-b border-slate-800 text-white px-6 py-2.5 flex items-center justify-between shadow-md  mb-2">
-      <div className="flex items-center space-x-3 overflow-hidden">
-        <div className="relative w-10 h-10 bg-slate-800 rounded-md flex items-center justify-center shrink-0">
+    <div
+      ref={elementRef}
+      style={
+        position
+          ? { left: position.x, top: position.y, right: "auto", bottom: "auto" }
+          : undefined
+      }
+      title={isMinimized ? [title, subtitle].filter(Boolean).join(" · ") : undefined}
+      className={`fixed bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-center justify-between gap-3 rounded-2xl border bg-ink-900/80 px-3 py-2.5 text-white shadow-2xl backdrop-blur sm:bottom-auto sm:left-auto sm:right-4 sm:top-24 ${sizeClasses} ${
+        isDragging ? "select-none border-brand-400/50" : "border-ink-700/60"
+      }`}
+    >
+      <button
+        type="button"
+        {...handleProps}
+        aria-label="Mover reproductor (flechas del teclado; doble clic para restablecer)"
+        title="Arrastra para mover · doble clic para restablecer"
+        className={`-ml-1 hidden h-11 w-5 shrink-0 touch-none items-center justify-center rounded text-ink-500 hover:text-ink-300 focus-visible:outline-2 focus-visible:outline-brand-400 sm:flex ${
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        }`}
+      >
+        <GripVertical className="h-4 w-4" aria-hidden="true" />
+      </button>
+
+      <div
+        className={`flex min-w-0 items-center gap-3 ${isMinimized ? "" : "flex-1"}`}
+      >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink-800 text-brand-400">
           {isPlaying ? (
-            <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-            </span>
-          ) : null}
-          <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-          </svg>
+            <div className="flex h-5 items-end gap-0.5" aria-hidden="true">
+              {EQUALIZER_DELAYS_SECONDS.map((delay) => (
+                <span
+                  key={delay}
+                  className="eq-bar"
+                  style={{ animationDelay: `${delay}s` }}
+                />
+              ))}
+            </div>
+          ) : (
+            <Music className="h-5 w-5" aria-hidden="true" />
+          )}
         </div>
-        <div className="truncate">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-400">
-            {label}
+
+        {!isMinimized && (
+          <div className="min-w-0">
+            <div
+              className={`truncate text-[10px] font-semibold uppercase tracking-wider ${
+                canPlay ? "text-brand-400" : "text-ink-500"
+              }`}
+            >
+              {label}
+            </div>
+            <div className="truncate text-sm font-medium text-white">
+              {title}
+            </div>
+            <div className="line-clamp-2 text-[11px] text-ink-400">
+              {subtitle}
+            </div>
           </div>
-          <div className="text-xs font-medium truncate text-white">{title}</div>
-          <div className="text-[10px] text-slate-400 truncate">{subtitle}</div>
-        </div>
+        )}
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={toggleMinimized}
+          aria-label={
+            isMinimized ? "Expandir reproductor" : "Minimizar reproductor"
+          }
+          aria-expanded={!isMinimized}
+          title={isMinimized ? "Expandir" : "Minimizar"}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-2 focus-visible:outline-brand-400"
+        >
+          {isMinimized ? (
+            <Maximize2 className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Minimize2 className="h-4 w-4" aria-hidden="true" />
+          )}
+        </button>
+
         <button
           onClick={togglePlay}
           disabled={!canPlay}
-          className="bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white p-2 rounded-full transition shadow-md flex items-center justify-center cursor-pointer"
-          aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
+          className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-brand-700 text-white shadow-md transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label={isPlaying ? "Pausar" : "Reproducir"}
         >
           {isPlaying ? (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <Pause className="h-5 w-5" fill="currentColor" />
           ) : (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <Play className="ml-0.5 h-5 w-5" fill="currentColor" />
           )}
         </button>
       </div>

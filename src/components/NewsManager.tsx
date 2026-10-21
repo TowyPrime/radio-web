@@ -2,7 +2,13 @@
 
 import { NewsRecord } from "@/lib/news/types";
 import { useState } from "react";
+import Image from "next/image";
 import NewsEditor from "@/components/NewsEditor";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import {
   NEWS_CATEGORIES,
   NEWS_LIMITS,
@@ -242,29 +248,25 @@ const handleDelete = async (id: string) => {
   }
 };
 return (
-  <div className="max-w-6xl mx-auto mt-10 p-6 bg-slate-900 rounded-lg shadow-lg border border-slate-800 space-y-6">
+  <div className="max-w-6xl mx-auto mt-10 p-6 bg-ink-900 rounded-lg shadow-lg border border-ink-800 space-y-6">
     {/* Encabezado principal */}
     <div className="flex items-center justify-between">
       <div>
         <h1 className="text-2xl font-bold text-white mb-1">Noticias</h1>
-        <p className="text-slate-400 text-sm">
+        <p className="text-ink-400 text-sm">
           Administra las publicaciones y novedades del sitio.
         </p>
       </div>
       {!isFormOpen && (
-        <button
-          type="button"
-          onClick={openCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
-        >
+        <Button type="button" size="md" onClick={openCreate}>
           Nueva noticia
-        </button>
+        </Button>
       )}
     </div>
 
     {/* Formulario desplegable con estilo de 2 columnas */}
     {isFormOpen && (
-      <div className="bg-slate-800/50 p-6 rounded-lg border border-slate-700/50">
+      <div className="bg-ink-800/50 p-6 rounded-lg border border-ink-700/50">
         <h2 className="text-xl font-semibold text-white mb-4">
           {editingId !== null ? "Editar noticia" : "Crear nueva noticia"}
         </h2>
@@ -275,48 +277,51 @@ return (
           <div className="md:col-span-2 space-y-4">
             {/* Título */}
             <div>
-              <label className="block text-sm font-medium text-slate-300">Título</label>
-              <input
+              <Label htmlFor="news-title" className="text-ink-300">Título</Label>
+              <Input
+                id="news-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={NEWS_LIMITS.title}
                 placeholder="Título de la noticia"
-                className="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mt-1 focus:outline-none focus:border-blue-500 text-sm"
+                className="mt-1"
               />
             </div>
 
             {/* Resumen */}
             <div>
-              <label className="block text-sm font-medium text-slate-300">Resumen</label>
-              <textarea
+              <Label htmlFor="news-summary" className="text-ink-300">Resumen</Label>
+              <Textarea
+                id="news-summary"
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
                 maxLength={NEWS_LIMITS.summary}
                 rows={3}
                 placeholder="Breve descripción de la noticia..."
-                className="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mt-1 focus:outline-none focus:border-blue-500 text-sm"
+                className="mt-1"
               />
             </div>
 
             {/* Categoría */}
             <div>
-              <label className="block text-sm font-medium text-slate-300">Categoría</label>
-              <select
+              <Label htmlFor="news-category" className="text-ink-300">Categoría</Label>
+              <Select
+                id="news-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mt-1 focus:outline-none focus:border-blue-500 text-sm"
+                className="mt-1"
               >
                 {NEWS_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {/* Editor */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Contenido</label>
-              <div className="bg-slate-800 rounded border border-slate-700 p-2">
+              <label className="block text-sm font-medium text-ink-300 mb-1">Contenido</label>
+              <div className="bg-ink-800 rounded border border-ink-700 p-2">
                 <NewsEditor 
                   key={`${editingId ?? "new"}-${formVersion}`} 
                   value={content} 
@@ -328,8 +333,8 @@ return (
 
           {/* Columna Derecha: Portada, Vista Previa y Botones */}
           <div className="space-y-6">
-            <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 space-y-4">
-              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+            <div className="bg-ink-800 p-4 rounded-lg border border-ink-700 space-y-4">
+              <h3 className="text-sm font-semibold text-ink-300 uppercase tracking-wider">
                 Imagen de Portada
               </h3>
               
@@ -337,46 +342,55 @@ return (
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={handleCoverChange}
-                className="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600 cursor-pointer"
+                className="w-full text-xs text-ink-400 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-ink-700 file:text-white hover:file:bg-ink-600 cursor-pointer"
               />
 
               {coverPreview && (
                 <div className="space-y-3 pt-2">
-                  <div className="w-full h-36 rounded overflow-hidden bg-slate-900 border border-slate-700">
-                    <img
+                  <div className="relative w-full h-36 rounded overflow-hidden bg-ink-900 border border-ink-700">
+                    {/* Es una vista previa local (blob:) o la portada ya guardada: sin optimizar */}
+                    <Image
                       src={coverPreview}
                       alt="Vista previa de portada"
-                      className="w-full h-full object-cover"
+                      fill
+                      unoptimized
+                      sizes="(min-width: 768px) 33vw, 100vw"
+                      className="object-cover"
                     />
                   </div>
-                  <button
+                  <Button
                     type="button"
+                    variant="destructive"
+                    size="sm"
                     onClick={handleRemoveCover}
-                    className="w-full bg-red-900/40 hover:bg-red-900/70 text-red-200 text-xs font-medium py-1.5 px-3 rounded border border-red-800/50 transition-colors"
+                    className="w-full"
                   >
                     Quitar portada
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
 
             {/* Acciones de formulario */}
             <div className="flex flex-col gap-2">
-              <button
+              <Button
                 type="submit"
+                size="md"
                 disabled={isSubmitting}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium p-2 rounded text-sm transition-colors disabled:opacity-50"
+                className="w-full"
               >
                 {isSubmitting ? "Guardando..." : "Guardar Noticia"}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
+                size="md"
                 onClick={closeForm}
                 disabled={isSubmitting}
-                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium p-2 rounded text-sm transition-colors border border-slate-700"
+                className="w-full"
               >
                 Cancelar
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -387,42 +401,46 @@ return (
     {/* Listado de tarjetas de noticias */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {newsList.map((news) => (
-        <div key={news.id} className="bg-slate-800/50 rounded-lg border border-slate-700/50 overflow-hidden flex flex-col justify-between shadow-sm">
+        <div key={news.id} className="bg-ink-800/50 rounded-lg border border-ink-700/50 overflow-hidden flex flex-col justify-between shadow-sm">
           <div>
             {news.cover_url && (
-              <div className="h-44 w-full overflow-hidden bg-slate-800">
-                <img
+              <div className="relative h-44 w-full overflow-hidden bg-ink-800">
+                <Image
                   src={news.cover_url}
                   alt={news.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                  className="object-cover"
                 />
               </div>
             )}
             <div className="p-4 space-y-2">
-              <span className="inline-block bg-blue-900/40 text-blue-300 border border-blue-800/50 px-2 py-0.5 rounded text-xs font-semibold">
+              <span className="inline-block bg-brand-800/40 text-brand-300 border border-brand-700/50 px-2 py-0.5 rounded text-xs font-semibold">
                 {news.category}
               </span>
               <h3 className="text-base font-bold text-white line-clamp-2">{news.title}</h3>
-              <p className="text-slate-400 text-xs line-clamp-3">{news.summary}</p>
+              <p className="text-ink-400 text-xs line-clamp-3">{news.summary}</p>
             </div>
           </div>
 
-          <div className="p-4 pt-0 flex items-center justify-end gap-2 border-t border-slate-700/50 mt-4">
-            <button
+          <div className="p-4 pt-0 flex items-center justify-end gap-2 border-t border-ink-700/50 mt-4">
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => openEdit(news)}
-              className="bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium py-1.5 px-3 rounded transition-colors"
             >
               Editar
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="destructive"
+              size="sm"
               onClick={() => handleDelete(news.id)}
               disabled={deletingId === news.id}
-              className="bg-red-900/40 hover:bg-red-900/70 text-red-200 text-xs font-medium py-1.5 px-3 rounded border border-red-800/50 transition-colors disabled:opacity-50"
             >
               {deletingId === news.id ? "Borrando..." : "Borrar"}
-            </button>
+            </Button>
           </div>
         </div>
       ))}

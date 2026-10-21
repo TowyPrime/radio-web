@@ -70,12 +70,12 @@ export function VisitorNicknameDialog() {
         onClick={handleCancel}
       />
 
-      <div className="relative w-full max-w-sm bg-slate-950 border border-slate-800 text-white rounded-xl shadow-2xl p-6 z-10 my-auto animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-sm bg-ink-950 border border-ink-800 text-white rounded-xl shadow-2xl p-6 z-10 my-auto animate-in fade-in zoom-in-95 duration-200">
         
         <button 
           type="button"
           onClick={handleCancel}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors cursor-pointer"
+          className="absolute top-4 right-4 text-ink-400 hover:text-white transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -83,14 +83,14 @@ export function VisitorNicknameDialog() {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <h2 className="text-xl font-bold text-white">Elige tu apodo</h2>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-ink-400 mt-1">
               Necesitamos un nombre para que puedas interactuar en el sitio.
             </p>
           </div>
           
           <FieldGroup className="py-2 space-y-3">
             <Field>
-              <Label htmlFor="username" className="text-slate-300 text-sm">Nickname</Label>
+              <Label htmlFor="username" className="text-ink-300 text-sm">Nickname</Label>
               <Input 
                 id="username" 
                 name="username" 
@@ -101,7 +101,7 @@ export function VisitorNicknameDialog() {
                 maxLength={30}
                 required 
                 disabled={loading}
-                className="bg-slate-900 border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-blue-500"
+                className="bg-ink-900 border-ink-800 text-white placeholder:text-ink-500 focus-visible:ring-brand-400"
               />
             </Field>
           </FieldGroup>
@@ -117,7 +117,7 @@ export function VisitorNicknameDialog() {
                 type="button" 
                 onClick={handleCancel}
                 disabled={loading}
-                className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer"
+                className="bg-ink-900 border-ink-800 text-ink-300 hover:bg-ink-800 hover:text-white cursor-pointer"
               >
                 Cancelar
               </Button>
@@ -125,7 +125,7 @@ export function VisitorNicknameDialog() {
               <Button 
                 type="submit" 
                 disabled={loading} 
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0 cursor-pointer"
+                className="flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white border-0 cursor-pointer"
               >
                 {loading ? (
                   <>

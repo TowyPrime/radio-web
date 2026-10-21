@@ -2,10 +2,10 @@ import Link from "next/link";
 
 export default function AuthErrorPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-ink-950 px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8 text-center">
         {/* Icono o indicador visual */}
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-400">
           <svg
             className="h-8 w-8"
             fill="none"
@@ -23,10 +23,10 @@ export default function AuthErrorPage() {
         </div>
 
         <div>
-          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-white">
             Error de autenticación
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-ink-400">
             No pudimos verificar tu identidad o el enlace de acceso ha expirado o ya fue utilizado.
           </p>
         </div>
@@ -35,14 +35,14 @@ export default function AuthErrorPage() {
         <div className="mt-8 flex flex-col gap-3">
           <Link
             href="/login"
-            className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            className="flex w-full justify-center rounded-md bg-brand-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
           >
             Volver a iniciar sesión
           </Link>
           
           <Link
             href="/"
-            className="flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            className="flex w-full justify-center rounded-md bg-ink-900 px-3 py-2 text-sm font-semibold text-ink-100 shadow-sm ring-1 ring-inset ring-ink-700 hover:bg-ink-800"
           >
             Ir al inicio
           </Link>

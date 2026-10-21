@@ -2,6 +2,9 @@ import PlaylistManager from "@/components/PlaylistManager";
 import { TrackRecord } from "@/services/audioService/types";
 import { getTracks } from "@/services/audioService/tracks";
 
+// Lee datos con la sesión (cookies): siempre se genera en cada petición
+export const dynamic = "force-dynamic";
+
 export default async function CreatePlaylistPage() {
   let tracks: TrackRecord[] = [];
   let errorMessage: string | null = null;

@@ -2,6 +2,9 @@ import { TrackRecord } from "@/services/audioService/types";
 import MusicManager from "@/components/MusicManager";
 import { getTracks } from "@/services/audioService/tracks";
 
+// Lee datos con la sesión (cookies): siempre se genera en cada petición
+export const dynamic = "force-dynamic";
+
 export default async function SaveMusicPage() {
   let tracks: TrackRecord[] = [];
   let errorMessage: string | null = null;

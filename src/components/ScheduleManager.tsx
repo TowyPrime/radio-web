@@ -6,6 +6,10 @@ import { notify } from "./toast";
 import { AppError } from "@/data/AppError";
 import { Slot } from "@/lib/schedule/types";
 import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { STATION_TIME_ZONE } from "@/lib/schedule/constants";
 import { useRouter } from "next/navigation";
 
@@ -186,7 +190,7 @@ export default function ScheduleManager() {
   return (
     <div className=" mx-auto px-4 md:px-8 py-8">
       <h1 className="text-3xl font-bold text-white mb-2">Crear horario</h1>
-      <p className="text-slate-400 text-sm mb-6">
+      <p className="text-ink-400 text-sm mb-6">
         Crea un horario para llevar el control de lo que se reproduce en la
         página.
       </p>
@@ -195,17 +199,18 @@ export default function ScheduleManager() {
         {/* Formulario de creación */}
         <form
           onSubmit={handleSubmit}
-          className="md:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 h-fit"
+          className="md:col-span-3 bg-ink-900 border border-ink-800 rounded-2xl p-6 space-y-4 h-fit"
         >
           {/* Selección de playlist */}
           <div>
-            <label className="block text-sm font-medium text-slate-300">
+            <Label htmlFor="schedule-playlist" className="text-ink-300">
               Selecciona una playlist
-            </label>
-            <select
+            </Label>
+            <Select
+              id="schedule-playlist"
               value={playlistId}
               onChange={(e) => setPlaylistId(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mt-1 focus:outline-none focus:border-blue-500 text-sm"
+              className="mt-1"
             >
               <option value="" disabled>
                 -- Selecciona una opción --
@@ -215,35 +220,37 @@ export default function ScheduleManager() {
                   {playlist.title}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Ingreso de Fechas/Horarios */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-ink-300 mb-2">
               Horario (Ciudad de México)
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-400">
+                <Label htmlFor="schedule-start" className="text-xs text-ink-400">
                   Hora de inicio
-                </label>
-                <input
+                </Label>
+                <Input
+                  id="schedule-start"
                   type="datetime-local"
                   value={startsAt}
                   onChange={(e) => setStartsAt(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mt-1 focus:outline-none focus:border-blue-500 text-sm"
+                  className="mt-1"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-400">
+                <Label htmlFor="schedule-end" className="text-xs text-ink-400">
                   Hora de fin
-                </label>
-                <input
+                </Label>
+                <Input
+                  id="schedule-end"
                   type="datetime-local"
                   value={endsAt}
                   onChange={(e) => setEndsAt(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mt-1 focus:outline-none focus:border-blue-500 text-sm"
+                  className="mt-1"
                 />
               </div>
             </div>
@@ -251,32 +258,35 @@ export default function ScheduleManager() {
 
           {/* Sección de botones */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <button
+            <Button
               type="submit"
+              size="md"
               disabled={isSubmitting}
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium p-2.5 rounded text-sm transition-colors disabled:opacity-50"
+              className="flex-1"
             >
               {isSubmitting ? "Guardando..." : "Guardar horario"}
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="md"
               onClick={cleanFields}
               disabled={isSubmitting}
-              className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium p-2.5 rounded text-sm transition-colors border border-slate-700 disabled:opacity-50"
+              className="flex-1"
             >
               Limpiar
-            </button>
+            </Button>
           </div>
         </form>
 
         {/* Lista/Panel lateral de Horarios existentes */}
-        <div className="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div className="md:col-span-2 bg-ink-900 border border-ink-800 rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">
             Horarios Programados
           </h2>
           {slots.length === 0 ? (
-            <p className="text-slate-500 text-sm">
+            <p className="text-ink-500 text-sm">
               No hay horarios programados actualmente.
             </p>
           ) : (
@@ -284,31 +294,34 @@ export default function ScheduleManager() {
               {slots.map((slot) => (
                 <div
                   key={slot.id}
-                  className="bg-slate-800/60 border border-slate-700/50 p-3 rounded-lg text-xs space-y-1"
+                  className="bg-ink-800/60 border border-ink-700/50 p-3 rounded-lg text-xs space-y-1"
                 >
                   {/* Cabecera */}
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-medium text-blue-400">
+                    <p className="font-medium text-brand-400">
                       {slot.playlist_title || "Playlist sin título"}
                     </p>
                     {/*Botones */}
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <button
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => handleDelete(slot)}
                         disabled={deletingId === slot.id}
                         aria-label="Cancelar horario"
-                        className="text-slate-500 hover:text-red-400 disabled:opacity-50 transition-colors cursor-pointer"
+                        className="text-ink-500 hover:bg-transparent hover:text-red-400"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
-                  <p className="text-slate-300">
-                    <span className="text-slate-400">Inicio:</span>{" "}
+                  <p className="text-ink-300">
+                    <span className="text-ink-400">Inicio:</span>{" "}
                     {dateFormatter.format(new Date(slot.starts_at))}
                   </p>
-                  <p className="text-slate-300">
-                    <span className="text-slate-400">Fin:</span>{" "}
+                  <p className="text-ink-300">
+                    <span className="text-ink-400">Fin:</span>{" "}
                     {dateFormatter.format(new Date(slot.ends_at))}
                   </p>
                 </div>

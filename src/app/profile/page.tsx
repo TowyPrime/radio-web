@@ -1,6 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { createClient } from '@/utils/supabase/client';
 import { userService } from '@/services/userService';
 import { AuthService } from '@/services/authService';
@@ -200,11 +204,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-6 bg-slate-900 rounded-lg shadow-lg border border-slate-800">
+    <div className="max-w-4xl mx-auto mt-10 p-6 bg-ink-900 rounded-lg shadow-lg border border-ink-800">
       <h1 className="text-2xl font-bold text-white mb-2">
         {isNewProfile ? 'Completa tu perfil' : 'Esta es la página del perfil del usuario'}
       </h1>
-      <p className="text-slate-400 text-sm mb-6">
+      <p className="text-ink-400 text-sm mb-6">
         {isNewProfile 
           ? 'Es tu primera vez por aquí. Por favor, define tu nombre de usuario único y tus datos.' 
           : 'Aquí puedes actualizar la información de tu cuenta.'}
@@ -216,26 +220,30 @@ export default function ProfilePage() {
         {/* Columna Izquierda: Avatar + Formulario */}
         <div className="md:col-span-2 space-y-6">
           
-          <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50 flex items-center gap-6">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-800 border-2 border-slate-700 flex items-center justify-center shrink-0">
+          <div className="bg-ink-800/50 p-4 rounded-lg border border-ink-700/50 flex items-center gap-6">
+            <div className="relative w-24 h-24 rounded-full overflow-hidden bg-ink-800 border-2 border-ink-700 flex items-center justify-center shrink-0">
               {previewUrl ? (
-                <img 
-                  src={previewUrl} 
+                // Avatar de 96px: puede ser una vista previa local (blob:) o venir de otro
+                // dominio (Google, Supabase), así que no se optimiza
+                <Image
+                  src={previewUrl}
                   alt="Avatar preview"
-                  loading="eager" 
-                  className="w-full h-full object-cover"
+                  fill
+                  unoptimized
+                  sizes="96px"
+                  className="object-cover"
                 />
               ) : (
-                <svg className="w-14 h-14 text-slate-500" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-14 h-14 text-ink-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
                 </svg>
               )}
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-1">
+              <h3 className="text-sm font-semibold text-ink-300 uppercase tracking-wider mb-1">
                 Tu Avatar
               </h3>
-              <p className="text-xs text-slate-400 mb-3">
+              <p className="text-xs text-ink-400 mb-3">
                 {previewUrl ? 'Imagen lista para actualizarse.' : 'Modo anónimo activado. Selecciona una imagen abajo.'}
               </p>
             </div>
@@ -243,84 +251,88 @@ export default function ProfilePage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300">Nombre de usuario (Único)</label>
-              <input
+              <Label htmlFor="profile-username" className="text-ink-300">Nombre de usuario (Único)</Label>
+              <Input
+                id="profile-username"
                 type="text"
                 required
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mt-1 focus:outline-none focus:border-blue-500"
+                className="mt-1"
                 placeholder="ej. angel_dev"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300">Nombre completo</label>
-              <input
+              <Label htmlFor="profile-fullname" className="text-ink-300">Nombre completo</Label>
+              <Input
+                id="profile-fullname"
                 type="text"
                 required
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mt-1 focus:outline-none focus:border-blue-500"
+                className="mt-1"
                 placeholder="Tu nombre completo"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">
-                Subir nueva imagen de Avatar <span className="text-slate-500">(opcional)</span>
+              <label className="block text-sm font-medium text-ink-300 mb-1">
+                Subir nueva imagen de Avatar <span className="text-ink-500">(opcional)</span>
               </label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer"
+                className="w-full text-sm text-ink-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-ink-800 file:text-white hover:file:bg-ink-700 cursor-pointer"
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium p-2 rounded transition-colors disabled:opacity-50"
-            >
+            <Button type="submit" size="md" disabled={saving} className="w-full">
               {saving ? 'Guardando...' : isNewProfile ? 'Crear Perfil' : 'Guardar Cambios'}
-            </button>
+            </Button>
           </form>
 
         </div>
 
         {/* Columna Derecha: Botones de gestión de cuenta */}
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50 space-y-3 md:col-span-1">
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-2">
+        <div className="bg-ink-800/50 p-4 rounded-lg border border-ink-700/50 space-y-3 md:col-span-1">
+          <h3 className="text-sm font-semibold text-ink-300 uppercase tracking-wider mb-2">
             Gestión de Cuenta
           </h3>
           
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="md"
             onClick={handleSignOut}
-            className="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-3 rounded transition-colors text-left flex items-center justify-between"
+            className="w-full justify-between"
           >
             <span>Cerrar sesión</span>
-            <span>🚪</span>
-          </button>
+            <span aria-hidden="true">🚪</span>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="md"
             onClick={handleChangePassword}
-            className="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-3 rounded transition-colors text-left flex items-center justify-between"
+            className="w-full justify-between"
           >
             <span>Cambiar contraseña</span>
-            <span>🔑</span>
-          </button>
+            <span aria-hidden="true">🔑</span>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="destructive"
+            size="md"
             onClick={handleDeleteAccount}
-            className="w-full bg-red-900/40 hover:bg-red-900/70 text-red-200 text-sm font-medium py-2 px-3 rounded border border-red-800/50 transition-colors text-left flex items-center justify-between"
+            className="w-full justify-between"
           >
             <span>Borrar cuenta</span>
-            <span>⚠️️</span>
-          </button>
+            <span aria-hidden="true">⚠️</span>
+          </Button>
         </div>
 
       </div>

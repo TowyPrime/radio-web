@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { NewsCategory } from "./constants";
 import { NewsRecord, NewsSummary } from "./types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -22,13 +24,22 @@ export async function getNews(): Promise<NewsRecord[]> {
 
 
 
-export async function getNewsSummaries(): Promise<NewsSummary[]> {
-const supabase = await createClient();
+// Si se indica `category`, solo devuelve las noticias de esa categoría
+export async function getNewsSummaries(
+  category?: NewsCategory,
+): Promise<NewsSummary[]> {
+  const supabase = await createClient();
 
-  const { data: newsData, error: newsError } = await supabase
+  let query = supabase
     .from('news')
     .select('id, title, summary, category, cover_url, author_name, created_at')
     .order('created_at', { ascending: false });
+
+  if (category) {
+    query = query.eq('category', category);
+  }
+
+  const { data: newsData, error: newsError } = await query;
 
   if (newsError || !newsData) {
     console.error("Error al obtener news:", newsError);
@@ -38,19 +49,26 @@ const supabase = await createClient();
   return newsData;
 }
 
-export async function getNewsById(id: string): Promise<NewsRecord | null>  {
-  const supabase = await createClient();
+// `cache` hace que, dentro de una misma petición, la página y `generateMetadata`
+// compartan el resultado en lugar de consultar la noticia dos veces.
+export const getNewsById = cache(
+  async (id: string): Promise<NewsRecord | null> => {
+    const supabase = await createClient();
 
-  const {data: news, error} = await supabase.from('news')
-  .select()
-  .eq('id', id)
-  .maybeSingle();
+    const { data: news, error } = await supabase
+      .from("news")
+      .select()
+      .eq("id", id)
+      .maybeSingle();
 
-  if(error ){
-    console.error("Error al obtener news", error);
-    throw new Error(error?.message || "Error al obtener la noticia especificada");
-  }
+    if (error) {
+      console.error("Error al obtener news", error);
+      throw new Error(
+        error?.message || "Error al obtener la noticia especificada",
+      );
+    }
 
-  return news;
-}
+    return news;
+  },
+);
 
