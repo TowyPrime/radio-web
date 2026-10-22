@@ -4,7 +4,9 @@ import { Slot } from "@/lib/schedule/types";
 import { STATION_TIME_ZONE } from "@/lib/schedule/constants";
 import AutoRefresh from "@/components/AutoRefresh";
 import Countdown from "@/components/Countdown";
-import { getYoutubeEmbedUrl } from "@/lib/live/youtube";
+import LiveEmbed from "@/components/LiveEmbed";
+import { getLiveStatus, getYoutubeEmbedUrl } from "@/lib/live/youtube";
+import type { LiveStatus } from "@/lib/live/types";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +74,10 @@ export default async function LivePage() {
   }
 
   const youtubeEmbedUrl = getYoutubeEmbedUrl();
+  // Solo se pregunta a YouTube si el canal está configurado
+  const liveStatus: LiveStatus = youtubeEmbedUrl
+    ? await getLiveStatus()
+    : { configured: false, isLive: false, videoId: null, title: null };
 
   return (
     <main className="max-w-6xl mx-auto px-4 md:px-8 py-8">
@@ -91,16 +97,10 @@ export default async function LivePage() {
 
       {youtubeEmbedUrl ? (
         <div className="mb-8 w-full max-w-4xl mx-auto">
-          <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-black">
-            <iframe
-              src={youtubeEmbedUrl}
-              title="Transmisión en vivo de Youtube"
-              className="absolute top-0 left-0 w-full h-full border-0"
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-              allowFullScreen
-              referrerPolicy="strict-origin-when-cross-origin"
-            />
-          </div>
+          <LiveEmbed
+            initialStatus={liveStatus}
+            fallbackEmbedUrl={youtubeEmbedUrl}
+          />
         </div>
       ) : null}
 
