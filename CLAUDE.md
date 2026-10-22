@@ -75,6 +75,12 @@ Estado y decisiones al **2026-10-16**. Este archivo no contiene secretos; las cl
 - "Iniciar live" del menú abre `https://studio.youtube.com` en otra pestaña. Se borró la simulación `/live/start`.
 - Pendiente: probar con un directo público real; decidir si los directos se programan como horarios (ver "Decisión abierta").
 
+## Contacto y mensajes (código listo; falta crear la tabla en Supabase)
+- `/contact` (`components/ContactForm.tsx` + redes con `react-icons`: `SOCIAL_LINKS` en `lib/site.ts`, **hrefs por reemplazar con los reales**). El formulario guarda los mensajes **en la propia web**, sin servidor de correo: `POST /api/contact` (pública; valida con `lib/contact/validate.ts`, campo-trampa `website` para bots, límite de 3 mensajes por IP en 10 min con un HMAC de la IP —no se guarda la IP—, errores 400/429/500) → tabla `contact_messages` (script `supabase/contact_messages.sql`: RLS activado **sin políticas** y permisos revocados a anon/authenticated; solo la API con `service_role` la toca).
+- Admin: `/admin/messages` (`components/MessagesManager.tsx`: lista, filtro "Sin leer", marcar leído/no leído, borrar, "Responder" con `mailto:`; el texto se pinta como texto plano, nunca HTML), `PATCH/DELETE /api/admin/messages/[id]`, `GET /api/admin/messages/unread-count` (todas con `requireAdmin()`); el menú del admin muestra la insignia de sin leer (consulta cada 60 s y al recibir el evento `contact-messages-changed`).
+- Antes de esta versión el formulario mostraba "¡Mensaje enviado!" sin enviar nada.
+- Opcional a futuro: aviso por correo al admin (p. ej. Resend) y captcha (Cloudflare Turnstile) si llegara spam.
+
 ## Identidad visual (actualizado 2026-10-21)
 - Paleta de marca tomada del logo (verde azulado oscuro, turquesa, blanco, amarillo "RADIO"): tokens `brand-50..950` y `accent` en `@theme` de `src/app/globals.css`. **Usar `bg-brand-700` (botones, texto blanco), `text-brand-400` (acentos/enlaces), `border-brand-400`, etc.; no usar `blue-*`/`indigo-*`.** El rojo se conserva para "En vivo". Para cambiar la identidad solo se editan esos valores.
 - Neutros: escala `ink-50..950` (verde azulado) en `@theme`, **usar `bg-ink-950` (página), `bg-ink-900` (tarjetas), `bg-ink-800`/`border-ink-800` (campos y bordes), `text-ink-100/400/500` (textos); no usar `slate-*` ni `gray-*`.** Migración completa hecha el 2026-10-21 (incluida `auth/error`, que era tema claro).

@@ -14,11 +14,15 @@ import {
   LogOut,
   Newspaper,
   CalendarClock,
+  Inbox,
 } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { userService } from "@/services/userService";
 import { AuthService } from "@/services/authService";
+import { CONTACT_MESSAGES_CHANGED_EVENT } from "@/lib/contact/constants";
+
+const UNREAD_POLL_SECONDS = 60;
 
 interface NavbarProps {
   user: SupabaseUser | null;
@@ -41,6 +45,8 @@ export default function Navbar({
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  // Mensajes de contacto sin leer (solo se consulta si el usuario es admin)
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -62,6 +68,39 @@ export default function Navbar({
 
     checkAdminRole();
   }, [user]);
+
+  // Cuenta los mensajes de contacto sin leer para la insignia del menú: al entrar, cada
+  // minuto, cuando el admin lee o borra mensajes y al volver a la pestaña
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const loadUnreadCount = async () => {
+      try {
+        const response = await fetch("/api/admin/messages/unread-count");
+        if (!response.ok) return;
+
+        const data: { unread?: number } = await response.json();
+        setUnreadMessages(typeof data.unread === "number" ? data.unread : 0);
+      } catch {
+        // Sin conexión o error momentáneo: se mantiene el número anterior
+      }
+    };
+
+    const firstLoad = setTimeout(loadUnreadCount, 0);
+    const interval = setInterval(loadUnreadCount, UNREAD_POLL_SECONDS * 1000);
+    window.addEventListener(CONTACT_MESSAGES_CHANGED_EVENT, loadUnreadCount);
+    document.addEventListener("visibilitychange", loadUnreadCount);
+
+    return () => {
+      clearTimeout(firstLoad);
+      clearInterval(interval);
+      window.removeEventListener(
+        CONTACT_MESSAGES_CHANGED_EVENT,
+        loadUnreadCount,
+      );
+      document.removeEventListener("visibilitychange", loadUnreadCount);
+    };
+  }, [isAdmin]);
 
   // Cerrar el menú si se hace clic fuera de él
   useEffect(() => {
@@ -240,6 +279,22 @@ export default function Navbar({
                         >
                           <Newspaper className="w-4 h-4 text-brand-400"/>
                           <span>Crear noticia</span>
+                        </Link>
+                        <Link
+                          href="/admin/messages"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-ink-800 transition-colors"
+                        >
+                          <Inbox className="w-4 h-4 text-brand-400" />
+                          <span>Mensajes</span>
+                          {unreadMessages > 0 && (
+                            <span
+                              className="ml-auto rounded-full bg-brand-700 px-2 py-0.5 text-[10px] font-bold text-white"
+                              aria-label={`${unreadMessages} sin leer`}
+                            >
+                              {unreadMessages > 99 ? "99+" : unreadMessages}
+                            </span>
+                          )}
                         </Link>
                       </>
                     )}
