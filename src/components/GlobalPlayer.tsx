@@ -9,6 +9,7 @@ import {
   Pause,
   Play,
 } from "lucide-react";
+import MarqueeText from "@/components/MarqueeText";
 import { useAudio } from "../context/AudioContext";
 import { useDraggablePosition } from "@/hooks/useDraggablePosition";
 import { STATION_TIME_ZONE } from "@/lib/schedule/constants";
@@ -22,6 +23,28 @@ function formatNext(startsAt: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+interface PlayerLineProps {
+  text: string;
+  className: string;
+  /** Cómo se acorta el texto largo en escritorio (en móvil se desliza) */
+  desktopClassName: string;
+}
+
+// Una línea de texto del reproductor: en móvil se desliza si no cabe (el reproductor ocupa
+// casi todo el ancho y no se puede ensanchar); en escritorio se acorta con "…" o a dos líneas.
+function PlayerLine({ text, className, desktopClassName }: PlayerLineProps) {
+  if (!text) return null;
+
+  return (
+    <>
+      <MarqueeText text={text} className={`sm:hidden ${className}`} />
+      <div className={`hidden sm:block ${className} ${desktopClassName}`}>
+        {text}
+      </div>
+    </>
+  );
 }
 
 const EQUALIZER_DELAYS_SECONDS = [0, 0.25, 0.5];
@@ -40,36 +63,45 @@ export default function GlobalPlayer() {
     togglePlay,
   } = useAudio();
 
-  const { elementRef, position, isDragging, handleProps } =
+  const { elementRef, position, isDragging, isDesktop, handleProps } =
     useDraggablePosition<HTMLDivElement>({
       storageKey: PLAYER_POSITION_STORAGE_KEY,
       minTopPx: PLAYER_MIN_TOP_PX,
     });
 
-  const [isMinimized, setIsMinimized] = useState(false);
+  // `null` = aún no se sabe (antes de leer la preferencia guardada): se dibuja invisible para
+  // que en móvil no se vea un instante expandido y luego se encoja
+  const [minimizedPreference, setMinimizedPreference] = useState<
+    boolean | null
+  >(null);
+  const isMinimized = minimizedPreference ?? false;
+  // Cada tipo de pantalla recuerda su propia preferencia
+  const minimizedStorageKey = `${PLAYER_MINIMIZED_STORAGE_KEY}:${isDesktop ? "desktop" : "mobile"}`;
 
-  // Se recuerda si el usuario lo dejó minimizado (el primer dibujo siempre es el expandido,
-  // igual en servidor y cliente, y luego se aplica lo guardado)
+  // Sin preferencia guardada: en móvil empieza minimizado (para no tapar las noticias) y en
+  // escritorio expandido. Si el usuario lo cambia, se recuerda.
   useEffect(() => {
     const timer = setTimeout(() => {
+      let saved: string | null = null;
+
       try {
-        if (window.localStorage.getItem(PLAYER_MINIMIZED_STORAGE_KEY) === "1") {
-          setIsMinimized(true);
-        }
+        saved = window.localStorage.getItem(minimizedStorageKey);
       } catch {
-        // Sin almacenamiento disponible: se queda expandido
+        // Sin almacenamiento disponible: se usa el valor por defecto
       }
+
+      setMinimizedPreference(saved === null ? !isDesktop : saved === "1");
     }, 0);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [minimizedStorageKey, isDesktop]);
 
   const toggleMinimized = () => {
     const next = !isMinimized;
-    setIsMinimized(next);
+    setMinimizedPreference(next);
 
     try {
-      window.localStorage.setItem(PLAYER_MINIMIZED_STORAGE_KEY, next ? "1" : "0");
+      window.localStorage.setItem(minimizedStorageKey, next ? "1" : "0");
     } catch {
       // Solo no se recuerda la preferencia
     }
@@ -111,7 +143,7 @@ export default function GlobalPlayer() {
       title={isMinimized ? [title, subtitle].filter(Boolean).join(" · ") : undefined}
       className={`fixed bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-center justify-between gap-3 rounded-2xl border bg-ink-900/80 px-3 py-2.5 text-white shadow-2xl backdrop-blur sm:bottom-auto sm:left-auto sm:right-4 sm:top-24 ${sizeClasses} ${
         isDragging ? "select-none border-brand-400/50" : "border-ink-700/60"
-      }`}
+      } ${minimizedPreference === null ? "invisible" : ""}`}
     >
       <button
         type="button"
@@ -147,20 +179,24 @@ export default function GlobalPlayer() {
         </div>
 
         {!isMinimized && (
-          <div className="min-w-0">
-            <div
-              className={`truncate text-[10px] font-semibold uppercase tracking-wider ${
+          <div className="min-w-0 flex-1">
+            <PlayerLine
+              text={label}
+              className={`text-[10px] font-semibold uppercase tracking-wider ${
                 canPlay ? "text-brand-400" : "text-ink-500"
               }`}
-            >
-              {label}
-            </div>
-            <div className="truncate text-sm font-medium text-white">
-              {title}
-            </div>
-            <div className="line-clamp-2 text-[11px] text-ink-400">
-              {subtitle}
-            </div>
+              desktopClassName="truncate"
+            />
+            <PlayerLine
+              text={title}
+              className="text-sm font-medium text-white"
+              desktopClassName="truncate"
+            />
+            <PlayerLine
+              text={subtitle}
+              className="text-[11px] text-ink-400"
+              desktopClassName="line-clamp-2"
+            />
           </div>
         )}
       </div>

@@ -245,6 +245,35 @@
   }
 }
 
+/* Texto que se desliza cuando no cabe (MarqueeText): va y vuelve, con una pausa en cada extremo */
+@keyframes marquee-slide {
+  0%,
+  20% {
+    transform: translateX(0);
+  }
+  80%,
+  100% {
+    transform: translateX(var(--marquee-distance, 0px));
+  }
+}
+
+.marquee-run {
+  animation: marquee-slide var(--marquee-duration, 6s) ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-run {
+    animation: none;
+  }
+  /* Sin movimiento: el texto largo se corta con "…" */
+  .marquee-box {
+    text-overflow: ellipsis;
+  }
+  .marquee-inner {
+    display: inline;
+  }
+}
+
 /* Barras del ecualizador del reproductor flotante */
 @keyframes eq {
   0%, 100% {
