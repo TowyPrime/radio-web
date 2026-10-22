@@ -93,10 +93,12 @@ export default function GlobalPlayer() {
       : "";
   }
 
-  // Expandido, móvil: fijo abajo y a lo ancho. Escritorio: tarjeta angosta arriba a la
-  // derecha, bajo el Navbar, que el usuario puede arrastrar (su posición se recuerda).
-  // Minimizado: cápsula compacta pegada a la derecha (en móvil, abajo).
-  const sizeClasses = isMinimized ? "right-4" : "left-4 right-4 sm:w-96";
+  // Expandido, móvil: abajo y a lo ancho (con ancho fijo, para que al arrastrarlo conserve su
+  // tamaño). Escritorio: tarjeta angosta arriba a la derecha, bajo el Navbar. En ambos se puede
+  // arrastrar desde el asa y la posición se recuerda. Minimizado: cápsula compacta a la derecha.
+  const sizeClasses = isMinimized
+    ? "right-4"
+    : "left-4 w-[calc(100vw-2rem)] sm:w-96";
 
   return (
     <div
@@ -114,9 +116,11 @@ export default function GlobalPlayer() {
       <button
         type="button"
         {...handleProps}
-        aria-label="Mover reproductor (flechas del teclado; doble clic para restablecer)"
+        aria-label="Mover reproductor (flechas del teclado; doble clic o doble toque para restablecer)"
         title="Arrastra para mover · doble clic para restablecer"
-        className={`-ml-1 hidden h-11 w-5 shrink-0 touch-none items-center justify-center rounded text-ink-500 hover:text-ink-300 focus-visible:outline-2 focus-visible:outline-brand-400 sm:flex ${
+        // `touch-none`: en pantallas táctiles el gesto sobre el asa mueve el reproductor y no hace scroll.
+        // Es más ancho en móvil para que sea fácil de agarrar con el dedo.
+        className={`-ml-1 flex h-11 w-7 shrink-0 touch-none items-center justify-center rounded text-ink-500 hover:text-ink-300 focus-visible:outline-2 focus-visible:outline-brand-400 sm:w-5 ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
       >

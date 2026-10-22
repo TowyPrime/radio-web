@@ -21,13 +21,12 @@ export default function LiveEmbed({
   fallbackEmbedUrl,
 }: LiveEmbedProps) {
   const [status, setStatus] = useState<LiveStatus>(initialStatus);
-  const canDetect = initialStatus.configured;
 
   // Pregunta cada 30 s si el canal ya está en vivo (solo con la pestaña a la vista, y también
   // al volver a ella). El reproductor de YouTube no se entera solo de que empezó el directo.
+  // Se pregunta siempre, aunque la página haya cargado sin la llave de la API: si el servidor
+  // ya la tiene, la página pasa sola al modo con detección, sin necesidad de recargar.
   useEffect(() => {
-    if (!canDetect) return;
-
     const checkStatus = async () => {
       if (document.visibilityState !== "visible") return;
 
@@ -37,7 +36,9 @@ export default function LiveEmbed({
 
         const next: LiveStatus = await response.json();
         setStatus((prev) =>
-          prev.isLive === next.isLive && prev.videoId === next.videoId
+          prev.configured === next.configured &&
+          prev.isLive === next.isLive &&
+          prev.videoId === next.videoId
             ? prev
             : next,
         );
@@ -53,10 +54,10 @@ export default function LiveEmbed({
       clearInterval(interval);
       document.removeEventListener("visibilitychange", checkStatus);
     };
-  }, [canDetect]);
+  }, []);
 
   // Sin llave de la API: se mantiene el reproductor genérico de siempre
-  if (!canDetect) {
+  if (!status.configured) {
     return (
       <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-lg">
         <iframe

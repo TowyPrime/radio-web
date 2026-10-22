@@ -15,7 +15,7 @@ export interface Position {
 }
 
 interface UseDraggablePositionOptions {
-  /** Clave de localStorage donde se recuerda la posición */
+  /** Clave de localStorage donde se recuerda la posición (se guarda aparte para móvil y escritorio) */
   storageKey: string;
   /** Distancia mínima desde el borde superior (para no quedar bajo el Navbar) */
   minTopPx: number;
@@ -23,7 +23,8 @@ interface UseDraggablePositionOptions {
   edgeMarginPx?: number;
 }
 
-// Solo se puede arrastrar desde este ancho (el mismo breakpoint `sm` de Tailwind)
+// El mismo breakpoint `sm` de Tailwind. Móvil y escritorio tienen un sitio por defecto
+// distinto (abajo / arriba a la derecha), así que cada uno recuerda su propia posición.
 const DESKTOP_QUERY = "(min-width: 640px)";
 const KEYBOARD_STEP_PX = 16;
 const KEYBOARD_STEP_SHIFT_PX = 64;
@@ -69,6 +70,8 @@ export function useDraggablePosition<T extends HTMLElement>({
     getDesktopServerSnapshot,
   );
 
+  const deviceStorageKey = `${storageKey}:${isDesktop ? "desktop" : "mobile"}`;
+
   // Recorta una posición para que el elemento quede dentro de la pantalla
   const clamp = useCallback(
     (pos: Position): Position => {
@@ -91,53 +94,57 @@ export function useDraggablePosition<T extends HTMLElement>({
     (pos: Position | null) => {
       try {
         if (pos) {
-          window.localStorage.setItem(storageKey, JSON.stringify(pos));
+          window.localStorage.setItem(deviceStorageKey, JSON.stringify(pos));
         } else {
-          window.localStorage.removeItem(storageKey);
+          window.localStorage.removeItem(deviceStorageKey);
         }
       } catch {
         // Sin almacenamiento disponible (modo privado, bloqueado...): solo no se recuerda
       }
     },
-    [storageKey],
+    [deviceStorageKey],
   );
 
-  // Al montar (y al pasar a pantalla ancha) se recupera la posición guardada
+  // Al montar (y al cambiar entre móvil y escritorio) se recupera la posición guardada
+  // de ese tipo de pantalla; si no hay ninguna, vuelve a su sitio por defecto
   useEffect(() => {
-    if (!isDesktop) return;
-
     const timer = setTimeout(() => {
-      try {
-        const raw = window.localStorage.getItem(storageKey);
-        if (!raw) return;
+      let saved: Position | null = null;
 
-        const parsed: unknown = JSON.parse(raw);
-        if (isPosition(parsed)) setPosition(clamp(parsed));
+      try {
+        const raw = window.localStorage.getItem(deviceStorageKey);
+        const parsed: unknown = raw ? JSON.parse(raw) : null;
+        if (isPosition(parsed)) saved = clamp(parsed);
       } catch {
         // Valor corrupto o sin acceso: se usa la posición por defecto
       }
+
+      setPosition(saved);
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [isDesktop, storageKey, clamp]);
+  }, [deviceStorageKey, clamp]);
 
-  // Si la ventana se reduce, se evita que el elemento quede fuera de la pantalla
+  // Si la ventana cambia de tamaño (o gira el teléfono), se evita que el elemento
+  // quede fuera de la pantalla
   useEffect(() => {
-    if (!isDesktop) return;
-
     const handleResize = () => {
-      setPosition((prev) => (prev ? clamp(prev) : prev));
+      setPosition((prev) => {
+        if (!prev) return prev;
+        const next = clamp(prev);
+        return next.x === prev.x && next.y === prev.y ? prev : next;
+      });
     };
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [isDesktop, clamp]);
+  }, [clamp]);
 
   // Si el elemento cambia de tamaño (p. ej. al minimizarlo o expandirlo), se vuelve a
   // recortar la posición para que no quede fuera de la pantalla
   useEffect(() => {
     const element = elementRef.current;
-    if (!isDesktop || !element || typeof ResizeObserver === "undefined") return;
+    if (!element || typeof ResizeObserver === "undefined") return;
 
     const observer = new ResizeObserver(() => {
       setPosition((prev) => {
@@ -149,10 +156,11 @@ export function useDraggablePosition<T extends HTMLElement>({
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [isDesktop, clamp]);
+  }, [clamp]);
 
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
-    if (!isDesktop || event.button !== 0) return;
+    // Con el ratón solo el botón principal; con el dedo (táctil) siempre
+    if (event.pointerType === "mouse" && event.button !== 0) return;
 
     const element = elementRef.current;
     if (!element) return;
@@ -169,8 +177,12 @@ export function useDraggablePosition<T extends HTMLElement>({
     setPosition(startPosition);
     setIsDragging(true);
 
-    // El asa sigue recibiendo el movimiento aunque el cursor salga de ella
-    event.currentTarget.setPointerCapture(event.pointerId);
+    // El asa sigue recibiendo el movimiento aunque el cursor o el dedo salgan de ella
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // El puntero ya terminó (p. ej. un toque muy breve): el arrastre simplemente no continúa
+    }
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
@@ -206,8 +218,6 @@ export function useDraggablePosition<T extends HTMLElement>({
 
   // Mover con el teclado (flechas; con Mayús, pasos más grandes)
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (!isDesktop) return;
-
     const step = event.shiftKey ? KEYBOARD_STEP_SHIFT_PX : KEYBOARD_STEP_PX;
     const moves: Record<string, Position> = {
       ArrowLeft: { x: -step, y: 0 },
@@ -231,8 +241,7 @@ export function useDraggablePosition<T extends HTMLElement>({
 
   return {
     elementRef,
-    // En móvil se ignora cualquier posición guardada: el reproductor va fijo abajo
-    position: isDesktop ? position : null,
+    position,
     isDragging,
     isDesktop,
     handleProps: {
