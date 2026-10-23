@@ -88,6 +88,9 @@ Estado y decisiones al **2026-10-16**. Este archivo no contiene secretos; las cl
 - Ocultar la ruta no es una medida de seguridad por sí sola: la protección real es que no hay registro público (solo invitaciones), las contraseñas y los límites de Supabase Auth. No poner esta ruta en `robots.txt` ni en enlaces.
 - `auth/error` enlaza a `ADMIN_LOGIN_PATH`. Las invitaciones siguen igual (`/auth/confirm` → `/profile`).
 
+## Documentación para el administrador (creada el 2026-10-23)
+- Guía para el cliente en un documento de Claude Docs: **https://claude.ai/artifact/6UYz7YFjrvYEMRGprwMv5a** ("Guía del administrador — Con el pie derecho radio"; se puede exportar a Word/PDF). Cubre qué ve el público, las **direcciones ocultas** (`/admin/acceder`, `/admin/invite`, etc.), cómo iniciar sesión, subir música, playlists, horarios, directos de YouTube, noticias, mensajes de contacto, invitar a otro admin, límites, preguntas frecuentes y seguridad, con capturas (las de administración usan datos de ejemplo). **Si cambian rutas, límites o flujos, actualizar la guía**; falta rellenar en ella el contacto de soporte técnico.
+
 ## Identidad visual (actualizado 2026-10-21)
 - Paleta de marca tomada del logo (verde azulado oscuro, turquesa, blanco, amarillo "RADIO"): tokens `brand-50..950` y `accent` en `@theme` de `src/app/globals.css`. **Usar `bg-brand-700` (botones, texto blanco), `text-brand-400` (acentos/enlaces), `border-brand-400`, etc.; no usar `blue-*`/`indigo-*`.** El rojo se conserva para "En vivo". Para cambiar la identidad solo se editan esos valores.
 - Neutros: escala `ink-50..950` (verde azulado) en `@theme`, **usar `bg-ink-950` (página), `bg-ink-900` (tarjetas), `bg-ink-800`/`border-ink-800` (campos y bordes), `text-ink-100/400/500` (textos); no usar `slate-*` ni `gray-*`.** Migración completa hecha el 2026-10-21 (incluida `auth/error`, que era tema claro).
