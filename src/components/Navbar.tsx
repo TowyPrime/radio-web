@@ -7,7 +7,6 @@ import {
   Search,
   Mail,
   User,
-  LogIn,
   Video,
   Music,
   ListPlus,
@@ -30,7 +29,6 @@ interface NavbarProps {
   onLogoClick?: () => void;
   onNewsClick?: () => void;
   onContactClick?: () => void;
-  onAuthClick?: () => void;
   onLogout?: () => void;
 }
 
@@ -40,7 +38,6 @@ export default function Navbar({
   onLogoClick,
   onNewsClick,
   onContactClick,
-  onAuthClick,
   onLogout,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -321,18 +318,7 @@ export default function Navbar({
                   </div>
                 )}
               </div>
-            ) : (
-              <Link
-                href="/login"
-                onClick={onAuthClick}
-                aria-label="Acceder"
-                className="flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white px-3 min-[360px]:px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer"
-              >
-                <LogIn className="w-4 h-4" />
-                {/* En pantallas muy estrechas (< 360px) solo se muestra el icono */}
-                <span className="hidden min-[360px]:inline">Acceder</span>
-              </Link>
-            )}
+            ) : null /* Sin sesión no hay botón de acceso: el equipo entra por una ruta oculta */}
           </div>
         </div>
       </div>

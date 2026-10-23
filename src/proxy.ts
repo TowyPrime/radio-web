@@ -1,6 +1,7 @@
 // proxy.ts (antes middleware.ts, convención renombrada en Next 16)
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
+import { ADMIN_LOGIN_PATH } from "@/lib/auth/paths";
 import { ensureAdminVisitor } from "./utils/supabase/service";
 import { createServiceRoleClient } from "./utils/supabase/service";
 
@@ -12,6 +13,12 @@ export async function proxy(request: NextRequest) {
   await ensureAdminVisitor(request, supabaseResponse, user);
 
   const pathname = request.nextUrl.pathname;
+
+  // El inicio de sesión del equipo vive bajo /admin pero debe poder abrirse sin sesión
+  if (pathname === ADMIN_LOGIN_PATH) {
+    return supabaseResponse;
+  }
+
   const isProtectRoute = ["/music", "/playlist", "/admin"];
 
   const isProtected = isProtectRoute.some((route) =>

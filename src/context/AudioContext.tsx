@@ -30,6 +30,14 @@ const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
 const REFRESH_INTERVAL_MS = 60_000;
 
+// Además del ciclo de 60 s, se consulta la programación justo cuando un programa empieza o
+// termina, para que el botón de play y el cartel cambien en ese momento y no hasta un minuto después
+const BOUNDARY_MARGIN_MS = 500;
+// Si al llegar la hora el servidor todavía no refleja el cambio (relojes con unos segundos de
+// diferencia), se reintenta cada pocos segundos durante una ventana corta
+const BOUNDARY_RETRY_MS = 2_000;
+const BOUNDARY_RETRY_WINDOW_MS = 10_000;
+
 export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [status, setStatus] = useState<PlayerStatus>('loading');
@@ -46,6 +54,9 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   const trackIndexRef = useRef(-1);
   const slotIdRef = useRef<string | null>(null);
   const isPlayingRef = useRef(false);
+  const boundaryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Referencia a `fetchSchedule` para que pueda volver a programarse a sí misma
+  const fetchScheduleRef = useRef<() => Promise<void>>(async () => {});
 
   const getPosition = useCallback((current: BroadcastCurrent) => {
     const elapsedSeconds =
@@ -120,6 +131,33 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
     playTrack(current, nextIndex, 0);
   }, [goOffAir, playTrack]);
 
+  // Programa una consulta para el próximo cambio de programa (cuando empieza el siguiente o
+  // termina el actual), medido con el reloj del servidor. Solo si cae dentro del ciclo normal;
+  // si está más lejos, el propio ciclo de 60 s lo programará cuando se acerque.
+  const scheduleBoundaryFetch = useCallback((data: BroadcastState) => {
+    if (boundaryTimerRef.current) clearTimeout(boundaryTimerRef.current);
+
+    const serverNow = Date.now() + clockOffsetRef.current;
+    const boundaries = [data.current?.ends_at, data.next?.starts_at]
+      .filter((value): value is string => !!value)
+      .map((value) => Date.parse(value) - serverNow)
+      // Una hora que pasó hace pocos segundos y sigue sin reflejarse en el servidor se reintenta
+      .filter((remainingMs) => remainingMs > -BOUNDARY_RETRY_WINDOW_MS);
+
+    if (boundaries.length === 0) return;
+
+    const remainingMs = Math.min(...boundaries);
+    if (remainingMs > REFRESH_INTERVAL_MS) return;
+
+    const delayMs =
+      remainingMs > 0 ? remainingMs + BOUNDARY_MARGIN_MS : BOUNDARY_RETRY_MS;
+
+    boundaryTimerRef.current = setTimeout(
+      () => fetchScheduleRef.current(),
+      delayMs,
+    );
+  }, []);
+
   const fetchSchedule = useCallback(async () => {
     try {
       const response = await fetch('/api/schedule', { cache: 'no-store' });
@@ -131,6 +169,7 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
       broadcastRef.current = data;
       clockOffsetRef.current = Date.parse(data.serverTime) - Date.now();
       setNextProgram(data.next);
+      scheduleBoundaryFetch(data);
 
       const current = data.current;
       const position = current ? getPosition(current) : null;
@@ -159,7 +198,11 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Error al consultar la programación:', error);
       setStatus((prev) => (prev === 'loading' ? 'off-air' : prev));
     }
-  }, [getPosition, goOffAir, syncAndPlay]);
+  }, [getPosition, goOffAir, scheduleBoundaryFetch, syncAndPlay]);
+
+  useEffect(() => {
+    fetchScheduleRef.current = fetchSchedule;
+  }, [fetchSchedule]);
 
   useEffect(() => {
     const audio = new Audio();
@@ -186,6 +229,7 @@ const intervalId = setInterval(fetchSchedule, REFRESH_INTERVAL_MS);
     return () => {
       clearInterval(intervalId);
       clearTimeout(initialFetchId);
+      if (boundaryTimerRef.current) clearTimeout(boundaryTimerRef.current);
       audio.pause();
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('pause', onStop);

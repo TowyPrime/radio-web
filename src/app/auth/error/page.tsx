@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ADMIN_LOGIN_PATH } from "@/lib/auth/paths";
 
 export default function AuthErrorPage() {
   return (
@@ -34,7 +35,7 @@ export default function AuthErrorPage() {
         {/* Acciones para el usuario */}
         <div className="mt-8 flex flex-col gap-3">
           <Link
-            href="/login"
+            href={ADMIN_LOGIN_PATH}
             className="flex w-full justify-center rounded-md bg-brand-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
           >
             Volver a iniciar sesión
